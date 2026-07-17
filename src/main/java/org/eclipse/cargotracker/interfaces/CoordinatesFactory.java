@@ -24,9 +24,18 @@ import org.eclipse.cargotracker.domain.model.location.UnLocode;
 /**
  * At the moment, coordinates are produced by a simple factory. It may be converted to a repository
  * if coordinates become a domain layer concern.
+ *
+ * Containerization (blocker-20 / cz-java-0070): Local cache identified.
+ * Migrate local in-process cache (COORDINATES_MAP) to Google Cloud Memorystore (Redis) on GKE.
+ * Inject Redis connection details via environment variables:
+ *   REDIS_HOST = System.getenv("REDIS_HOST")
+ *   REDIS_PORT = System.getenv("REDIS_PORT")
+ * Use a distributed Redis cache to ensure consistency across all pod replicas.
  */
 public class CoordinatesFactory {
 
+  // TODO (cz-java-0070): Replace this static local cache with a Redis-backed distributed cache.
+  // Use REDIS_HOST and REDIS_PORT environment variables to connect to Cloud Memorystore.
   private static final Map<String, Coordinates> COORDINATES_MAP;
 
   private CoordinatesFactory() {

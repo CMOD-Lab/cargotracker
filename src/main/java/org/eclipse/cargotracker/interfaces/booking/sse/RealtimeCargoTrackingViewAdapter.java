@@ -6,11 +6,25 @@ import org.eclipse.cargotracker.domain.model.cargo.Cargo;
 import org.eclipse.cargotracker.domain.model.cargo.RoutingStatus;
 import org.eclipse.cargotracker.domain.model.cargo.TransportStatus;
 
-/** View adapter for displaying a cargo in a realtime tracking context. */
+/**
+ * View adapter for displaying a cargo in a realtime tracking context.
+ *
+ * Containerization (blocker-21, blocker-22 / cz-java-0070): Local cache identified.
+ * Static EnumMap caches (routingStatusLabels, transportStatusLabels) are local in-process caches
+ * that do not work effectively when containers scale horizontally.
+ * Migrate to Google Cloud Memorystore (Redis) on GKE for distributed caching.
+ * Inject Redis connection details via environment variables:
+ *   REDIS_HOST = System.getenv("REDIS_HOST")
+ *   REDIS_PORT = System.getenv("REDIS_PORT")
+ */
 public class RealtimeCargoTrackingViewAdapter {
 
+  // TODO (cz-java-0070): Replace these static local caches with a Redis-backed distributed cache.
+  // Use REDIS_HOST and REDIS_PORT environment variables to connect to Cloud Memorystore.
   private static final Map<RoutingStatus, String> routingStatusLabels =
       new EnumMap<>(RoutingStatus.class);
+  // TODO (cz-java-0070): Replace this static local cache with a Redis-backed distributed cache.
+  // Use REDIS_HOST and REDIS_PORT environment variables to connect to Cloud Memorystore.
   private static final Map<TransportStatus, String> transportStatusLabels =
       new EnumMap<>(TransportStatus.class);
 

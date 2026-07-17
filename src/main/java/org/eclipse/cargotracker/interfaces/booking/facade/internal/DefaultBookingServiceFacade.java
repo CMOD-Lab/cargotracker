@@ -5,6 +5,11 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+// Containerization (blocker-10 / cz-java-0064): Singleton state storage identified.
+// Migrate JVM singleton state to Google Cloud Memorystore (Redis) on GKE Autopilot.
+// Inject Redis connection details via environment variables:
+//   REDIS_HOST = System.getenv("REDIS_HOST")
+//   REDIS_PORT = System.getenv("REDIS_PORT")
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.eclipse.cargotracker.application.BookingService;
