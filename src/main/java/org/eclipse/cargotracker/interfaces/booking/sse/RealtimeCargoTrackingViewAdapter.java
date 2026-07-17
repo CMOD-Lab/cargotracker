@@ -6,14 +6,16 @@ import org.eclipse.cargotracker.domain.model.cargo.Cargo;
 import org.eclipse.cargotracker.domain.model.cargo.RoutingStatus;
 import org.eclipse.cargotracker.domain.model.cargo.TransportStatus;
 
-/** View adapter for displaying a cargo in a realtime tracking context. */
 public class RealtimeCargoTrackingViewAdapter {
 
+  // cz-java-0070: Local in-process cache identified. For horizontal scaling on GKE Autopilot,
+  // migrate these static EnumMaps to Google Cloud Memorystore (Redis) injecting connection
+  // details via REDIS_HOST and REDIS_PORT environment variables.
   private static final Map<RoutingStatus, String> routingStatusLabels =
       new EnumMap<>(RoutingStatus.class);
+  // cz-java-0070: Local in-process cache - see above comment for Redis migration guidance.
   private static final Map<TransportStatus, String> transportStatusLabels =
       new EnumMap<>(TransportStatus.class);
-
   private final Cargo cargo;
 
   public RealtimeCargoTrackingViewAdapter(Cargo cargo) {

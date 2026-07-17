@@ -1,14 +1,14 @@
 package org.eclipse.cargotracker.application.util;
 
+import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.logging.Logger;
 import jakarta.annotation.PostConstruct;
-import jakarta.ejb.Singleton;
-import jakarta.ejb.Startup;
 import jakarta.ejb.TransactionAttribute;
 import jakarta.ejb.TransactionAttributeType;
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.LockModeType;
@@ -27,10 +27,13 @@ import org.eclipse.cargotracker.domain.model.handling.HandlingHistory;
 import org.eclipse.cargotracker.domain.model.location.SampleLocations;
 import org.eclipse.cargotracker.domain.model.voyage.SampleVoyages;
 
-/** Loads sample data for demo. */
-@Singleton
-@Startup
-public class SampleDataGenerator {
+// cz-java-0064: Replaced @Singleton with @ApplicationScoped to avoid JVM-local singleton state
+// that causes inconsistencies when scaling containers horizontally on GKE Autopilot.
+// State should be externalized to Google Cloud Memorystore (Redis) via environment variables.
+@ApplicationScoped
+public class SampleDataGenerator implements Serializable {
+
+  private static final long serialVersionUID = 1L;
 
   @Inject private Logger logger;
 

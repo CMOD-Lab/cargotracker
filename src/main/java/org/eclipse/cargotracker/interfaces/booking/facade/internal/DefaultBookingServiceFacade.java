@@ -27,6 +27,9 @@ import org.eclipse.cargotracker.interfaces.booking.facade.internal.assembler.Car
 import org.eclipse.cargotracker.interfaces.booking.facade.internal.assembler.ItineraryCandidateDtoAssembler;
 import org.eclipse.cargotracker.interfaces.booking.facade.internal.assembler.LocationDtoAssembler;
 
+// cz-java-0064: @ApplicationScoped bean - singleton state storage identified.
+// For horizontal scaling on GKE Autopilot, externalize any shared state to
+// Google Cloud Memorystore (Redis) injecting connection via REDIS_HOST env variable.
 @ApplicationScoped
 public class DefaultBookingServiceFacade implements BookingServiceFacade, Serializable {
 

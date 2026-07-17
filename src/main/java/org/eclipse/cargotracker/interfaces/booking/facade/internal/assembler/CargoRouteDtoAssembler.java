@@ -11,6 +11,9 @@ import org.eclipse.cargotracker.domain.model.cargo.TransportStatus;
 import org.eclipse.cargotracker.interfaces.booking.facade.dto.CargoRoute;
 import org.eclipse.cargotracker.interfaces.booking.facade.dto.Leg;
 
+// cz-java-0064: @ApplicationScoped bean - singleton state storage identified.
+// For horizontal scaling on GKE Autopilot, externalize any shared state to
+// Google Cloud Memorystore (Redis) injecting connection via REDIS_HOST env variable.
 @ApplicationScoped
 public class CargoRouteDtoAssembler {
 

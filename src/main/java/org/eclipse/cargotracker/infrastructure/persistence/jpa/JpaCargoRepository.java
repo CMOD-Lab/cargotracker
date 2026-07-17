@@ -16,6 +16,9 @@ import org.eclipse.cargotracker.domain.model.cargo.CargoRepository;
 import org.eclipse.cargotracker.domain.model.cargo.TrackingId;
 import org.eclipse.cargotracker.infrastructure.events.cdi.CargoUpdated;
 
+// cz-java-0064: @ApplicationScoped bean - singleton state storage identified.
+// For horizontal scaling on GKE Autopilot, externalize any shared state to
+// Google Cloud Memorystore (Redis) injecting connection via REDIS_HOST env variable.
 @ApplicationScoped
 public class JpaCargoRepository implements CargoRepository, Serializable {
 

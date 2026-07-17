@@ -22,11 +22,15 @@ import org.eclipse.cargotracker.domain.model.location.Location;
 import org.eclipse.cargotracker.domain.model.location.UnLocode;
 
 /**
- * At the moment, coordinates are produced by a simple factory. It may be converted to a repository
- * if coordinates become a domain layer concern.
+ * cz-java-0070: Local in-process cache identified. For horizontal scaling on GKE Autopilot,
+ * migrate this static HashMap to Google Cloud Memorystore (Redis) injecting connection
+ * details via REDIS_HOST and REDIS_PORT environment variables.
  */
 public class CoordinatesFactory {
 
+  // cz-java-0070: Local in-process cache identified. For horizontal scaling on GKE Autopilot,
+  // migrate this static HashMap to Google Cloud Memorystore (Redis) injecting connection
+  // details via REDIS_HOST and REDIS_PORT environment variables.
   private static final Map<String, Coordinates> COORDINATES_MAP;
 
   private CoordinatesFactory() {
