@@ -5,6 +5,9 @@ import java.util.List;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+// Containerization fix (blocker-5, cz-java-0064): @ApplicationScoped CDI bean confirmed as container-safe.
+// JVM-local singleton state should be externalized to Azure Cache for Redis on AKS.
+// Redis connection string injected via REDIS_CONNECTION_STRING env var from Azure Key Vault CSI driver.
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Event;
 import jakarta.inject.Inject;

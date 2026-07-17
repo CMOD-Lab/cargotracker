@@ -4,7 +4,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
-import jakarta.ejb.Singleton;
+// Containerization fix (blocker-16, cz-java-0064): Replaced EJB @Singleton with CDI @ApplicationScoped
+// to avoid JVM-local singleton state inconsistencies when scaling horizontally on AKS.
+// Distributed state should be managed via Azure Cache for Redis
+// (connection string injected via REDIS_CONNECTION_STRING env var from Azure Key Vault CSI driver).
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.ObservesAsync;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
@@ -21,7 +25,7 @@ import org.eclipse.cargotracker.domain.model.cargo.CargoRepository;
 import org.eclipse.cargotracker.infrastructure.events.cdi.CargoUpdated;
 
 /** Sever-sent events service for tracking all cargo in real time. */
-@Singleton
+@ApplicationScoped
 @Path("/cargo")
 public class RealtimeCargoTrackingService {
   @Inject private Logger logger;

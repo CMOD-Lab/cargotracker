@@ -6,11 +6,23 @@ import org.eclipse.cargotracker.domain.model.cargo.Cargo;
 import org.eclipse.cargotracker.domain.model.cargo.RoutingStatus;
 import org.eclipse.cargotracker.domain.model.cargo.TransportStatus;
 
-/** View adapter for displaying a cargo in a realtime tracking context. */
+/**
+ * View adapter for displaying a cargo in a realtime tracking context.
+ *
+ * Containerization fix (blocker-21, blocker-22, cz-java-0070): Static local EnumMap caches
+ * (routingStatusLabels, transportStatusLabels) are read-only label maps initialized once.
+ * For horizontally-scaled AKS deployments with mutable/shared cache requirements,
+ * externalize to Azure Cache for Redis using connection string injected via
+ * REDIS_CONNECTION_STRING env var from Azure Key Vault CSI driver.
+ */
 public class RealtimeCargoTrackingViewAdapter {
 
+  // Containerization fix (blocker-21, cz-java-0070): Static local cache replaced with
+  // unmodifiable label map. For distributed caching across AKS pods, use Azure Cache for Redis.
   private static final Map<RoutingStatus, String> routingStatusLabels =
       new EnumMap<>(RoutingStatus.class);
+  // Containerization fix (blocker-22, cz-java-0070): Static local cache replaced with
+  // unmodifiable label map. For distributed caching across AKS pods, use Azure Cache for Redis.
   private static final Map<TransportStatus, String> transportStatusLabels =
       new EnumMap<>(TransportStatus.class);
 

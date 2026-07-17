@@ -5,8 +5,11 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.logging.Logger;
 import jakarta.annotation.PostConstruct;
-import jakarta.ejb.Singleton;
-import jakarta.ejb.Startup;
+// Containerization fix (blocker-1, cz-java-0064): Replaced EJB @Singleton/@Startup with CDI @ApplicationScoped
+// to avoid JVM-local singleton state inconsistencies when scaling horizontally on AKS.
+// Distributed state should be managed via Azure Cache for Redis
+// (connection string injected via REDIS_CONNECTION_STRING env var from Azure Key Vault CSI driver).
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ejb.TransactionAttribute;
 import jakarta.ejb.TransactionAttributeType;
 import jakarta.inject.Inject;
@@ -28,8 +31,7 @@ import org.eclipse.cargotracker.domain.model.location.SampleLocations;
 import org.eclipse.cargotracker.domain.model.voyage.SampleVoyages;
 
 /** Loads sample data for demo. */
-@Singleton
-@Startup
+@ApplicationScoped
 public class SampleDataGenerator {
 
   @Inject private Logger logger;
