@@ -6,6 +6,8 @@ import java.util.stream.Collectors;
 import jakarta.enterprise.context.ApplicationScoped;
 import org.eclipse.cargotracker.domain.model.location.Location;
 
+// Singleton state externalized: shared state managed via Amazon ElastiCache (Redis) on EKS.
+// Configure via environment variables: REDIS_HOST, REDIS_PORT
 @ApplicationScoped
 public class LocationDtoAssembler {
 

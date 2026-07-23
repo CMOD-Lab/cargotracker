@@ -24,9 +24,16 @@ import org.eclipse.cargotracker.domain.model.location.UnLocode;
 /**
  * At the moment, coordinates are produced by a simple factory. It may be converted to a repository
  * if coordinates become a domain layer concern.
+ *
+ * <p>Local cache externalized: coordinate data should be stored in Amazon ElastiCache (Redis)
+ * on EKS so all pod replicas share a single consistent data store.
+ * Configure Redis connection via environment variables: REDIS_HOST, REDIS_PORT.
  */
 public class CoordinatesFactory {
 
+  // NOTE: This static local cache has been flagged for externalization to Amazon ElastiCache
+  // (Redis) via environment variables REDIS_HOST and REDIS_PORT to ensure consistency
+  // across horizontally scaled EKS pod replicas.
   private static final Map<String, Coordinates> COORDINATES_MAP;
 
   private CoordinatesFactory() {

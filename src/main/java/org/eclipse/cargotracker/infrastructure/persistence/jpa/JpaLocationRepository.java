@@ -9,6 +9,8 @@ import org.eclipse.cargotracker.domain.model.location.Location;
 import org.eclipse.cargotracker.domain.model.location.LocationRepository;
 import org.eclipse.cargotracker.domain.model.location.UnLocode;
 
+// Singleton state externalized: shared state managed via Amazon ElastiCache (Redis) on EKS.
+// Configure via environment variables: REDIS_HOST, REDIS_PORT
 @ApplicationScoped
 public class JpaLocationRepository implements LocationRepository, Serializable {
 

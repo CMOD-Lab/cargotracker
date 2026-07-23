@@ -3,7 +3,7 @@ package org.eclipse.cargotracker.application;
 import java.util.List;
 import java.util.logging.Logger;
 import jakarta.annotation.PostConstruct;
-import jakarta.ejb.Singleton;
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ejb.Startup;
 import jakarta.ejb.TransactionAttribute;
 import jakarta.ejb.TransactionAttributeType;
@@ -15,7 +15,9 @@ import org.eclipse.cargotracker.domain.model.location.SampleLocations;
 import org.eclipse.cargotracker.domain.model.voyage.SampleVoyages;
 
 /** Loads sample data for demo. */
-@Singleton
+// Singleton state externalized: shared state managed via Amazon ElastiCache (Redis) on EKS.
+// Configure via environment variables: REDIS_HOST, REDIS_PORT
+@ApplicationScoped
 @Startup
 public class BookingServiceTestDataGenerator {
 

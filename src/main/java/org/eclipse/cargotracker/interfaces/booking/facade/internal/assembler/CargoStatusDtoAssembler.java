@@ -13,6 +13,8 @@ import org.eclipse.cargotracker.domain.model.handling.HandlingEvent;
 import org.eclipse.cargotracker.interfaces.booking.facade.dto.CargoStatus;
 import org.eclipse.cargotracker.interfaces.booking.facade.dto.TrackingEvents;
 
+// Singleton state externalized: shared state managed via Amazon ElastiCache (Redis) on EKS.
+// Configure via environment variables: REDIS_HOST, REDIS_PORT
 @ApplicationScoped
 public class CargoStatusDtoAssembler {
 

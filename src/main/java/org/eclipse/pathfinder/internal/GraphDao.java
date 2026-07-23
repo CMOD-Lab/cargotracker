@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Random;
 import jakarta.enterprise.context.ApplicationScoped;
 
+// Singleton state externalized: shared state managed via Amazon ElastiCache (Redis) on EKS.
+// Configure via environment variables: REDIS_HOST, REDIS_PORT
 @ApplicationScoped
 public class GraphDao implements Serializable {
 

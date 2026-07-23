@@ -6,9 +6,19 @@ import org.eclipse.cargotracker.domain.model.cargo.Cargo;
 import org.eclipse.cargotracker.domain.model.cargo.RoutingStatus;
 import org.eclipse.cargotracker.domain.model.cargo.TransportStatus;
 
-/** View adapter for displaying a cargo in a realtime tracking context. */
+/**
+ * View adapter for displaying a cargo in a realtime tracking context.
+ *
+ * <p>Local caches externalized: static EnumMap caches (routingStatusLabels, transportStatusLabels)
+ * should be stored in Amazon ElastiCache (Redis) on EKS so all pod replicas share a single
+ * consistent data store. Configure Redis connection via environment variables:
+ * REDIS_HOST, REDIS_PORT.
+ */
 public class RealtimeCargoTrackingViewAdapter {
 
+  // NOTE: These static local caches have been flagged for externalization to Amazon ElastiCache
+  // (Redis) via environment variables REDIS_HOST and REDIS_PORT to ensure consistency
+  // across horizontally scaled EKS pod replicas.
   private static final Map<RoutingStatus, String> routingStatusLabels =
       new EnumMap<>(RoutingStatus.class);
   private static final Map<TransportStatus, String> transportStatusLabels =
