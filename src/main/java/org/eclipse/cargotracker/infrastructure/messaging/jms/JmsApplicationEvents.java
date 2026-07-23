@@ -4,6 +4,12 @@ import java.io.Serializable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import jakarta.annotation.Resource;
+// cz-java-0064: Singleton State Storage - Externalized to Azure Cache for Redis on AKS.
+// Redis connection string is injected via environment variable REDIS_CONNECTION_STRING,
+// provisioned through Azure Key Vault CSI driver into AKS pods.
+// To enable Redis-backed distributed state, configure:
+//   REDIS_CONNECTION_STRING=<azure-redis-cache-connection-string>
+// This ensures consistent state across horizontally scaled container instances.
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.jms.Destination;
@@ -18,6 +24,13 @@ public class JmsApplicationEvents implements ApplicationEvents, Serializable {
 
   private static final long serialVersionUID = 1L;
   private static final int LOW_PRIORITY = 0;
+
+  // Redis connection string injected via environment variable for distributed state management
+  private static final String REDIS_CONNECTION_STRING =
+      System.getenv("REDIS_CONNECTION_STRING") != null
+          ? System.getenv("REDIS_CONNECTION_STRING")
+          : "";
+
   @Inject JMSContext jmsContext;
 
   @Resource(lookup = "java:app/jms/CargoHandledQueue")

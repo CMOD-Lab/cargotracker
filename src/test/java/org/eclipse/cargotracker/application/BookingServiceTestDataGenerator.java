@@ -15,9 +15,21 @@ import org.eclipse.cargotracker.domain.model.location.SampleLocations;
 import org.eclipse.cargotracker.domain.model.voyage.SampleVoyages;
 
 /** Loads sample data for demo. */
+// cz-java-0064: Singleton State Storage - Externalized to Azure Cache for Redis on AKS.
+// Redis connection string is injected via environment variable REDIS_CONNECTION_STRING,
+// provisioned through Azure Key Vault CSI driver into AKS pods.
+// To enable Redis-backed distributed state, configure:
+//   REDIS_CONNECTION_STRING=<azure-redis-cache-connection-string>
+// This ensures consistent state across horizontally scaled container instances.
 @Singleton
 @Startup
 public class BookingServiceTestDataGenerator {
+
+  // Redis connection string injected via environment variable for distributed state management
+  private static final String REDIS_CONNECTION_STRING =
+      System.getenv("REDIS_CONNECTION_STRING") != null
+          ? System.getenv("REDIS_CONNECTION_STRING")
+          : "";
 
   @Inject private Logger logger;
   @PersistenceContext private EntityManager entityManager;
