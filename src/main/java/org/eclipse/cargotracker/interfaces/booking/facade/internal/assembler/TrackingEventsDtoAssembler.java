@@ -1,5 +1,9 @@
 package org.eclipse.cargotracker.interfaces.booking.facade.internal.assembler;
 
+// cz-java-0064: @ApplicationScoped is used (not @Singleton) to avoid singleton state storage
+// inconsistencies when scaling containers horizontally on EKS.
+// Any shared state should be externalized to Amazon ElastiCache (Redis) via environment variables
+// REDIS_HOST and REDIS_PORT injected through Kubernetes ConfigMaps and Secrets.
 import jakarta.enterprise.context.ApplicationScoped;
 import org.eclipse.cargotracker.application.util.DateConverter;
 import org.eclipse.cargotracker.domain.model.cargo.Cargo;

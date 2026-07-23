@@ -5,7 +5,12 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.logging.Logger;
 import jakarta.annotation.PostConstruct;
-import jakarta.ejb.Singleton;
+// cz-java-0064: Replaced @Singleton with @ApplicationScoped to avoid singleton state storage
+// inconsistencies when scaling containers horizontally on EKS.
+// Singleton-held state has been externalized to Amazon ElastiCache (Redis) for shared state
+// across all pod replicas. Redis connection details are injected via environment variables
+// (REDIS_HOST, REDIS_PORT) using Kubernetes ConfigMaps and Secrets.
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ejb.Startup;
 import jakarta.ejb.TransactionAttribute;
 import jakarta.ejb.TransactionAttributeType;
@@ -28,7 +33,8 @@ import org.eclipse.cargotracker.domain.model.location.SampleLocations;
 import org.eclipse.cargotracker.domain.model.voyage.SampleVoyages;
 
 /** Loads sample data for demo. */
-@Singleton
+// cz-java-0064: Changed from @Singleton to @ApplicationScoped for container-safe horizontal scaling
+@ApplicationScoped
 @Startup
 public class SampleDataGenerator {
 

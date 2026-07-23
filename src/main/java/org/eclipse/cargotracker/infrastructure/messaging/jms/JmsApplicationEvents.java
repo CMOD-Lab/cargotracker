@@ -4,6 +4,10 @@ import java.io.Serializable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import jakarta.annotation.Resource;
+// cz-java-0064: @ApplicationScoped is used (not @Singleton) to avoid singleton state storage
+// inconsistencies when scaling containers horizontally on EKS.
+// Any shared state should be externalized to Amazon ElastiCache (Redis) via environment variables
+// REDIS_HOST and REDIS_PORT injected through Kubernetes ConfigMaps and Secrets.
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.jms.Destination;
