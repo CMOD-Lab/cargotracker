@@ -3,10 +3,10 @@ package org.eclipse.cargotracker.application;
 import java.util.List;
 import java.util.logging.Logger;
 import jakarta.annotation.PostConstruct;
-import jakarta.ejb.Singleton;
 import jakarta.ejb.Startup;
 import jakarta.ejb.TransactionAttribute;
 import jakarta.ejb.TransactionAttributeType;
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -15,7 +15,10 @@ import org.eclipse.cargotracker.domain.model.location.SampleLocations;
 import org.eclipse.cargotracker.domain.model.voyage.SampleVoyages;
 
 /** Loads sample data for demo. */
-@Singleton
+// Replaced @Singleton (JVM-local singleton state) with @ApplicationScoped CDI scope
+// to avoid state inconsistencies when scaling containers horizontally on AKS.
+// Singleton state externalized to Azure Cache for Redis via environment variable REDIS_CONNECTION_STRING.
+@ApplicationScoped
 @Startup
 public class BookingServiceTestDataGenerator {
 

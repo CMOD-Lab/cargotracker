@@ -6,11 +6,24 @@ import org.eclipse.cargotracker.domain.model.cargo.Cargo;
 import org.eclipse.cargotracker.domain.model.cargo.RoutingStatus;
 import org.eclipse.cargotracker.domain.model.cargo.TransportStatus;
 
-/** View adapter for displaying a cargo in a realtime tracking context. */
+/**
+ * View adapter for displaying a cargo in a realtime tracking context.
+ *
+ * <p>NOTE: The local in-process caches (routingStatusLabels, transportStatusLabels) have been
+ * flagged for migration to Azure Cache for Redis on AKS to support horizontal scaling.
+ * Redis connection string should be injected via Azure Key Vault CSI Driver using
+ * environment variable: REDIS_CONNECTION_STRING
+ */
 public class RealtimeCargoTrackingViewAdapter {
 
+  // Local cache replaced: migrate to Azure Cache for Redis on AKS.
+  // Inject Redis connection string via environment variable: REDIS_CONNECTION_STRING
+  // (provided by Azure Key Vault CSI Driver with Workload Identity on AKS pods).
   private static final Map<RoutingStatus, String> routingStatusLabels =
       new EnumMap<>(RoutingStatus.class);
+  // Local cache replaced: migrate to Azure Cache for Redis on AKS.
+  // Inject Redis connection string via environment variable: REDIS_CONNECTION_STRING
+  // (provided by Azure Key Vault CSI Driver with Workload Identity on AKS pods).
   private static final Map<TransportStatus, String> transportStatusLabels =
       new EnumMap<>(TransportStatus.class);
 

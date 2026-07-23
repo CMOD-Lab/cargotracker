@@ -1,0 +1,59 @@
+# Docker ignore for cargo-tracker Maven/Jakarta EE project
+# Build artifacts
+target/
+
+# Maven wrapper (never needed in Docker - use system mvn)
+mvnw
+mvnw.cmd
+.mvn/
+
+# Gradle wrapper (not used but exclude for safety)
+gradlew
+gradlew.bat
+gradle/wrapper/
+
+# Version control
+.git/
+.gitignore
+.github/
+
+# IDE files
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+.classpath
+.project
+.settings/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Documentation
+*.md
+LICENSE.md
+CONTRIBUTING.md
+DEPENDENCIES
+
+# Test files
+src/test/
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+
+# Local config overrides
+*.local
+
+# Node modules (if any)
+node_modules/
+
+# Coverage reports
+coverage/

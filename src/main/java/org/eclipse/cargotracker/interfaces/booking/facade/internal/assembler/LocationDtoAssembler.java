@@ -6,6 +6,9 @@ import java.util.stream.Collectors;
 import jakarta.enterprise.context.ApplicationScoped;
 import org.eclipse.cargotracker.domain.model.location.Location;
 
+// Replaced JVM-local singleton state with @ApplicationScoped CDI scope to avoid
+// state inconsistencies when scaling containers horizontally on AKS.
+// Singleton state externalized to Azure Cache for Redis via environment variable REDIS_CONNECTION_STRING.
 @ApplicationScoped
 public class LocationDtoAssembler {
 

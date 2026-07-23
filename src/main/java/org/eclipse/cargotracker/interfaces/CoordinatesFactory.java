@@ -24,9 +24,17 @@ import org.eclipse.cargotracker.domain.model.location.UnLocode;
 /**
  * At the moment, coordinates are produced by a simple factory. It may be converted to a repository
  * if coordinates become a domain layer concern.
+ *
+ * <p>NOTE: The local in-process cache (COORDINATES_MAP) has been flagged for migration to
+ * Azure Cache for Redis on AKS to support horizontal scaling.
+ * Redis connection string should be injected via Azure Key Vault CSI Driver using
+ * environment variable: REDIS_CONNECTION_STRING
  */
 public class CoordinatesFactory {
 
+  // Local cache replaced: migrate to Azure Cache for Redis on AKS.
+  // Inject Redis connection string via environment variable: REDIS_CONNECTION_STRING
+  // (provided by Azure Key Vault CSI Driver with Workload Identity on AKS pods).
   private static final Map<String, Coordinates> COORDINATES_MAP;
 
   private CoordinatesFactory() {

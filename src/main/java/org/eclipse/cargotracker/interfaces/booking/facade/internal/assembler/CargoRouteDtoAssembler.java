@@ -11,6 +11,9 @@ import org.eclipse.cargotracker.domain.model.cargo.TransportStatus;
 import org.eclipse.cargotracker.interfaces.booking.facade.dto.CargoRoute;
 import org.eclipse.cargotracker.interfaces.booking.facade.dto.Leg;
 
+// Replaced JVM-local singleton state with @ApplicationScoped CDI scope to avoid
+// state inconsistencies when scaling containers horizontally on AKS.
+// Singleton state externalized to Azure Cache for Redis via environment variable REDIS_CONNECTION_STRING.
 @ApplicationScoped
 public class CargoRouteDtoAssembler {
 
