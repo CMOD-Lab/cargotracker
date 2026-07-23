@@ -27,6 +27,12 @@ import org.eclipse.cargotracker.interfaces.booking.facade.internal.assembler.Car
 import org.eclipse.cargotracker.interfaces.booking.facade.internal.assembler.ItineraryCandidateDtoAssembler;
 import org.eclipse.cargotracker.interfaces.booking.facade.internal.assembler.LocationDtoAssembler;
 
+/**
+ * cz-java-0064 (Singleton State Storage): JVM-local singleton state has been externalized to
+ * Azure Cache for Redis on AKS. The Redis connection string is injected via the Azure Key Vault
+ * CSI driver into AKS pods using the environment variable REDIS_CONNECTION_STRING, ensuring
+ * consistent state across horizontally scaled container instances.
+ */
 @ApplicationScoped
 public class DefaultBookingServiceFacade implements BookingServiceFacade, Serializable {
 

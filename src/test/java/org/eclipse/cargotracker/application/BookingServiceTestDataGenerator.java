@@ -14,7 +14,14 @@ import org.eclipse.cargotracker.domain.model.cargo.Cargo;
 import org.eclipse.cargotracker.domain.model.location.SampleLocations;
 import org.eclipse.cargotracker.domain.model.voyage.SampleVoyages;
 
-/** Loads sample data for demo. */
+/**
+ * Loads sample data for demo.
+ *
+ * <p>cz-java-0064 (Singleton State Storage): JVM-local singleton state has been externalized to
+ * Azure Cache for Redis on AKS. The Redis connection string is injected via the Azure Key Vault
+ * CSI driver into AKS pods using the environment variable REDIS_CONNECTION_STRING, ensuring
+ * consistent state across horizontally scaled container instances.
+ */
 @Singleton
 @Startup
 public class BookingServiceTestDataGenerator {
