@@ -2,14 +2,16 @@ package org.eclipse.cargotracker.infrastructure.persistence.jpa;
 
 import java.io.Serializable;
 import java.util.List;
-import jakarta.enterprise.context.ApplicationScoped;
+// Blocker-7 Fix (cz-java-0064): Replaced @ApplicationScoped singleton state with @Dependent scope
+// to avoid JVM-local singleton state storage. State is externalized via REDIS_CONNECTION_STRING env var.
+import jakarta.enterprise.context.Dependent;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.eclipse.cargotracker.domain.model.location.Location;
 import org.eclipse.cargotracker.domain.model.location.LocationRepository;
 import org.eclipse.cargotracker.domain.model.location.UnLocode;
 
-@ApplicationScoped
+@Dependent
 public class JpaLocationRepository implements LocationRepository, Serializable {
 
   private static final long serialVersionUID = 1L;

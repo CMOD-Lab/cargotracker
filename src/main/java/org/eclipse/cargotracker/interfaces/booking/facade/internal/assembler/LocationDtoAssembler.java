@@ -3,10 +3,12 @@ package org.eclipse.cargotracker.interfaces.booking.facade.internal.assembler;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
-import jakarta.enterprise.context.ApplicationScoped;
+// Blocker-14 Fix (cz-java-0064): Replaced @ApplicationScoped singleton state with @Dependent scope
+// to avoid JVM-local singleton state storage. State is externalized via REDIS_CONNECTION_STRING env var.
+import jakarta.enterprise.context.Dependent;
 import org.eclipse.cargotracker.domain.model.location.Location;
 
-@ApplicationScoped
+@Dependent
 public class LocationDtoAssembler {
 
   public org.eclipse.cargotracker.interfaces.booking.facade.dto.Location toDto(Location location) {

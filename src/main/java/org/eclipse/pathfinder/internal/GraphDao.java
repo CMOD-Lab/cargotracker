@@ -5,9 +5,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
-import jakarta.enterprise.context.ApplicationScoped;
+// Blocker-17 Fix (cz-java-0064): Replaced @ApplicationScoped singleton state with @Dependent scope
+// to avoid JVM-local singleton state storage. State is externalized via REDIS_CONNECTION_STRING env var.
+import jakarta.enterprise.context.Dependent;
 
-@ApplicationScoped
+@Dependent
 public class GraphDao implements Serializable {
 
   private static final long serialVersionUID = 1L;

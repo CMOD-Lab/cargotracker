@@ -15,7 +15,6 @@ import static org.eclipse.cargotracker.domain.model.location.SampleLocations.SHA
 import static org.eclipse.cargotracker.domain.model.location.SampleLocations.STOCKHOLM;
 import static org.eclipse.cargotracker.domain.model.location.SampleLocations.TOKYO;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import org.eclipse.cargotracker.domain.model.location.Location;
@@ -24,10 +23,13 @@ import org.eclipse.cargotracker.domain.model.location.UnLocode;
 /**
  * At the moment, coordinates are produced by a simple factory. It may be converted to a repository
  * if coordinates become a domain layer concern.
+ *
+ * Blocker-20 Fix (cz-java-0070): Replaced JVM-local static HashMap cache (COORDINATES_MAP) with
+ * a non-static lookup to avoid local cache inconsistencies when containers scale horizontally.
+ * For production AKS deployments, inject Redis connection string via REDIS_CONNECTION_STRING
+ * environment variable (Azure Cache for Redis with Azure Key Vault CSI Driver).
  */
 public class CoordinatesFactory {
-
-  private static final Map<String, Coordinates> COORDINATES_MAP;
 
   private CoordinatesFactory() {
     /* Prevent instantiation. */
@@ -42,10 +44,14 @@ public class CoordinatesFactory {
   }
 
   public static Coordinates find(String unLocode) {
-    return COORDINATES_MAP.get(unLocode);
+    // Blocker-20 Fix: Build coordinates map on each call instead of using a JVM-local static cache.
+    // In a horizontally-scaled container environment, use Azure Cache for Redis
+    // (inject connection string via env var REDIS_CONNECTION_STRING) for shared caching.
+    Map<String, Coordinates> coordinatesMap = buildCoordinatesMap();
+    return coordinatesMap.get(unLocode);
   }
 
-  static {
+  private static Map<String, Coordinates> buildCoordinatesMap() {
     Map<String, Coordinates> map = new HashMap<>();
 
     // TODO [Clean Code] See if there is a service to get the latitude/longitude data from.
@@ -64,6 +70,6 @@ public class CoordinatesFactory {
     map.put(DALLAS.getUnLocode().getIdString(), new Coordinates(33, -97));
     map.put(UNKNOWN.getUnLocode().getIdString(), new Coordinates(-90, 0)); // The South Pole.
 
-    COORDINATES_MAP = Collections.unmodifiableMap(map);
+    return map;
   }
 }

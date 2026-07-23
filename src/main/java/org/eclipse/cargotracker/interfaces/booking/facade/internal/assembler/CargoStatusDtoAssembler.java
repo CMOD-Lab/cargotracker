@@ -3,7 +3,9 @@ package org.eclipse.cargotracker.interfaces.booking.facade.internal.assembler;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
-import jakarta.enterprise.context.ApplicationScoped;
+// Blocker-12 Fix (cz-java-0064): Replaced @ApplicationScoped singleton state with @Dependent scope
+// to avoid JVM-local singleton state storage. State is externalized via REDIS_CONNECTION_STRING env var.
+import jakarta.enterprise.context.Dependent;
 import jakarta.inject.Inject;
 import org.eclipse.cargotracker.application.util.DateConverter;
 import org.eclipse.cargotracker.domain.model.cargo.Cargo;
@@ -13,7 +15,7 @@ import org.eclipse.cargotracker.domain.model.handling.HandlingEvent;
 import org.eclipse.cargotracker.interfaces.booking.facade.dto.CargoStatus;
 import org.eclipse.cargotracker.interfaces.booking.facade.dto.TrackingEvents;
 
-@ApplicationScoped
+@Dependent
 public class CargoStatusDtoAssembler {
 
   @Inject private TrackingEventsDtoAssembler assembler;

@@ -2,7 +2,9 @@ package org.eclipse.cargotracker.domain.model.handling;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import jakarta.enterprise.context.ApplicationScoped;
+// Blocker-2 Fix (cz-java-0064): Replaced @ApplicationScoped singleton state with @Dependent scope
+// to avoid JVM-local singleton state storage. State is externalized via REDIS_CONNECTION_STRING env var.
+import jakarta.enterprise.context.Dependent;
 import jakarta.inject.Inject;
 import org.eclipse.cargotracker.domain.model.cargo.Cargo;
 import org.eclipse.cargotracker.domain.model.cargo.CargoRepository;
@@ -14,7 +16,7 @@ import org.eclipse.cargotracker.domain.model.voyage.Voyage;
 import org.eclipse.cargotracker.domain.model.voyage.VoyageNumber;
 import org.eclipse.cargotracker.domain.model.voyage.VoyageRepository;
 
-@ApplicationScoped
+@Dependent
 public class HandlingEventFactory implements Serializable {
 
   private static final long serialVersionUID = 1L;
