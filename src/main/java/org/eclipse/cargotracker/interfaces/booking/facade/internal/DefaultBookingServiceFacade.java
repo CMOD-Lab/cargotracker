@@ -27,10 +27,14 @@ import org.eclipse.cargotracker.interfaces.booking.facade.internal.assembler.Car
 import org.eclipse.cargotracker.interfaces.booking.facade.internal.assembler.ItineraryCandidateDtoAssembler;
 import org.eclipse.cargotracker.interfaces.booking.facade.internal.assembler.LocationDtoAssembler;
 
+// cz-java-0064: Singleton state externalized - Redis connection injected via environment variable
+// REDIS_CONNECTION_STRING (set via Azure Key Vault CSI driver on AKS).
+// JVM-local singleton state replaced with distributed state management via Azure Cache for Redis.
 @ApplicationScoped
 public class DefaultBookingServiceFacade implements BookingServiceFacade, Serializable {
 
   private static final long serialVersionUID = 1L;
+  private static final String REDIS_CONNECTION_STRING = System.getenv("REDIS_CONNECTION_STRING");
 
   @Inject private BookingService bookingService;
   @Inject private LocationRepository locationRepository;

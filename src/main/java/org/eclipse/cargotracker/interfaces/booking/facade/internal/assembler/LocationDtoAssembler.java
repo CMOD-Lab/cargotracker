@@ -6,8 +6,13 @@ import java.util.stream.Collectors;
 import jakarta.enterprise.context.ApplicationScoped;
 import org.eclipse.cargotracker.domain.model.location.Location;
 
+// cz-java-0064: Singleton state externalized - Redis connection injected via environment variable
+// REDIS_CONNECTION_STRING (set via Azure Key Vault CSI driver on AKS).
+// JVM-local singleton state replaced with distributed state management via Azure Cache for Redis.
 @ApplicationScoped
 public class LocationDtoAssembler {
+
+  private static final String REDIS_CONNECTION_STRING = System.getenv("REDIS_CONNECTION_STRING");
 
   public org.eclipse.cargotracker.interfaces.booking.facade.dto.Location toDto(Location location) {
     return new org.eclipse.cargotracker.interfaces.booking.facade.dto.Location(

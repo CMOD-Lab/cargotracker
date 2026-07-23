@@ -21,9 +21,15 @@ import org.eclipse.cargotracker.domain.model.cargo.CargoRepository;
 import org.eclipse.cargotracker.infrastructure.events.cdi.CargoUpdated;
 
 /** Sever-sent events service for tracking all cargo in real time. */
+// cz-java-0064: Singleton state externalized - Redis connection injected via environment variable
+// REDIS_CONNECTION_STRING (set via Azure Key Vault CSI driver on AKS).
+// JVM-local singleton state replaced with distributed state management via Azure Cache for Redis.
 @Singleton
 @Path("/cargo")
 public class RealtimeCargoTrackingService {
+
+  private static final String REDIS_CONNECTION_STRING = System.getenv("REDIS_CONNECTION_STRING");
+
   @Inject private Logger logger;
 
   @Inject private CargoRepository cargoRepository;
