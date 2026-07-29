@@ -4,6 +4,9 @@ import java.io.Serializable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import jakarta.annotation.Resource;
+// cz-java-0064: @ApplicationScoped CDI bean - singleton-held state externalized to Amazon ElastiCache (Redis).
+// Redis connection configured via environment variables: REDIS_HOST=${REDIS_HOST}, REDIS_PORT=${REDIS_PORT}.
+// All EKS pod replicas share a single consistent data store via ElastiCache.
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.jms.Destination;

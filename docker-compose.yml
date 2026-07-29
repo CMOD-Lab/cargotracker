@@ -1,35 +1,43 @@
-# To run the cloud version locally, first build the application using:
-#
-#  ./mvnw clean package -Pcloud
-#      -DpostgreSqlJdbcUrl="jdbc:postgresql://postgres:5432/postgres"
-#      -DpostgreSqlUsername="cargotracker" -DpostgreSqlPassword="cargotracker"
-#
-# Then start the services with:
-#
-#  docker-compose up
-#
-version: '3.8'
+version: "3.8"
 
 services:
-  postgres:
-    image: postgres:16
-    environment:
-      POSTGRES_USER: cargotracker
-      POSTGRES_PASSWORD: cargotracker
-      POSTGRES_DB: postgres
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
-
-  cargotracker:
-    build: .
+  cargo-tracker:
+    image: cargo-tracker:latest
+    container_name: cargo-tracker-app
+    build:
+      context: .
+      dockerfile: Dockerfile
     ports:
       - "8080:8080"
-    depends_on:
-      - postgres
+      - "4848:4848"
     environment:
-      DB_HOST: postgres
+      # JVM tuning
+      JAVA_OPTS: "-Xmx512m -Xms256m -XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:+UnlockExperimentalVMOptions"
+      TZ: "UTC"
+      # Database configuration (override for local dev - uses H2 embedded by default)
+      # Uncomment and set these for PostgreSQL:
+      # POSTGRESQL_JDBC_URL: "jdbc:postgresql://db-host:5432/cargotracker"
+      # POSTGRESQL_USERNAME: "postgres"
+      # POSTGRESQL_PASSWORD: "postgres"
+      # Graph traversal service URL
+      GRAPH_TRAVERSAL_URL: "http://localhost:8080/cargo-tracker/rest/graph-traversal/shortest-path"
+    volumes:
+      - cargo-tracker-data:/opt/payara/cargo-tracker-data
+      - ./logs:/opt/payara/logs
+    networks:
+      - app-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
 
 volumes:
-  postgres-data:
+  cargo-tracker-data:
+    driver: local
+
+networks:
+  app-network:
+    driver: bridge

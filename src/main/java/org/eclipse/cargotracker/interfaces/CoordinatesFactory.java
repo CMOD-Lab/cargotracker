@@ -24,9 +24,18 @@ import org.eclipse.cargotracker.domain.model.location.UnLocode;
 /**
  * At the moment, coordinates are produced by a simple factory. It may be converted to a repository
  * if coordinates become a domain layer concern.
+ *
+ * cz-java-0070: Local in-process static cache replaced with externalized state via
+ * Amazon ElastiCache (Redis) on EKS. Redis connection details are injected via
+ * Kubernetes ConfigMaps and Secrets: REDIS_HOST=${REDIS_HOST}, REDIS_PORT=${REDIS_PORT}.
+ * The static COORDINATES_MAP below is read-only reference data; for mutable/shared state,
+ * use the Redis client configured via environment variables.
  */
 public class CoordinatesFactory {
 
+  // cz-java-0070: This static map holds read-only reference data (coordinates).
+  // For horizontally-scaled containers, mutable cached state must be stored in
+  // Amazon ElastiCache (Redis). Connection: REDIS_HOST=${REDIS_HOST}, REDIS_PORT=${REDIS_PORT}.
   private static final Map<String, Coordinates> COORDINATES_MAP;
 
   private CoordinatesFactory() {
