@@ -5,6 +5,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
+// cz-java-0064: @ApplicationScoped used instead of @Singleton to avoid singleton state storage
+// inconsistencies when scaling containers horizontally on EKS.
+// Any shared state should be externalized to Amazon ElastiCache (Redis) for consistency across pods.
 import jakarta.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped

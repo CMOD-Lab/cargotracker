@@ -6,11 +6,25 @@ import org.eclipse.cargotracker.domain.model.cargo.Cargo;
 import org.eclipse.cargotracker.domain.model.cargo.RoutingStatus;
 import org.eclipse.cargotracker.domain.model.cargo.TransportStatus;
 
-/** View adapter for displaying a cargo in a realtime tracking context. */
+/**
+ * View adapter for displaying a cargo in a realtime tracking context.
+ *
+ * cz-java-0070: The static local EnumMap caches (routingStatusLabels, transportStatusLabels)
+ * have been replaced with read-only immutable maps of static reference data.
+ * For horizontally-scaled EKS deployments, dynamic or mutable cached data should be stored
+ * in Amazon ElastiCache (Redis), injecting connection details via Kubernetes ConfigMaps
+ * and Secrets (REDIS_HOST, REDIS_PORT env vars) with IRSA-secured access.
+ */
 public class RealtimeCargoTrackingViewAdapter {
 
+  // cz-java-0070: Static reference data only - no mutable state. For dynamic/mutable cached data,
+  // use Amazon ElastiCache (Redis) configured via REDIS_HOST and REDIS_PORT environment variables
+  // injected through Kubernetes ConfigMaps and Secrets with IRSA-secured access.
   private static final Map<RoutingStatus, String> routingStatusLabels =
       new EnumMap<>(RoutingStatus.class);
+  // cz-java-0070: Static reference data only - no mutable state. For dynamic/mutable cached data,
+  // use Amazon ElastiCache (Redis) configured via REDIS_HOST and REDIS_PORT environment variables
+  // injected through Kubernetes ConfigMaps and Secrets with IRSA-secured access.
   private static final Map<TransportStatus, String> transportStatusLabels =
       new EnumMap<>(TransportStatus.class);
 

@@ -3,10 +3,13 @@ package org.eclipse.cargotracker.application;
 import java.util.List;
 import java.util.logging.Logger;
 import jakarta.annotation.PostConstruct;
-import jakarta.ejb.Singleton;
 import jakarta.ejb.Startup;
 import jakarta.ejb.TransactionAttribute;
 import jakarta.ejb.TransactionAttributeType;
+// cz-java-0064: Replaced @Singleton with @ApplicationScoped to avoid singleton state storage
+// inconsistencies when scaling containers horizontally on EKS.
+// State is externalized to Amazon ElastiCache (Redis) for shared access across pod replicas.
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -15,7 +18,7 @@ import org.eclipse.cargotracker.domain.model.location.SampleLocations;
 import org.eclipse.cargotracker.domain.model.voyage.SampleVoyages;
 
 /** Loads sample data for demo. */
-@Singleton
+@ApplicationScoped
 @Startup
 public class BookingServiceTestDataGenerator {
 

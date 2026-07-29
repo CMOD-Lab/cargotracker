@@ -1,6 +1,9 @@
 package org.eclipse.cargotracker.infrastructure.persistence.jpa;
 
 import java.io.Serializable;
+// cz-java-0064: @ApplicationScoped used instead of @Singleton to avoid singleton state storage
+// inconsistencies when scaling containers horizontally on EKS.
+// Any shared state should be externalized to Amazon ElastiCache (Redis) for consistency across pods.
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;

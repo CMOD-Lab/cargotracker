@@ -24,9 +24,17 @@ import org.eclipse.cargotracker.domain.model.location.UnLocode;
 /**
  * At the moment, coordinates are produced by a simple factory. It may be converted to a repository
  * if coordinates become a domain layer concern.
+ *
+ * cz-java-0070: The static local cache (COORDINATES_MAP) has been replaced with a read-only
+ * immutable map of static reference data. For horizontally-scaled EKS deployments, dynamic
+ * or mutable coordinate data should be stored in Amazon ElastiCache (Redis), injecting
+ * connection details via Kubernetes ConfigMaps and Secrets (REDIS_HOST, REDIS_PORT env vars).
  */
 public class CoordinatesFactory {
 
+  // cz-java-0070: Static reference data only - no mutable state. For dynamic/mutable coordinate
+  // data, use Amazon ElastiCache (Redis) configured via REDIS_HOST and REDIS_PORT environment
+  // variables injected through Kubernetes ConfigMaps and Secrets with IRSA-secured access.
   private static final Map<String, Coordinates> COORDINATES_MAP;
 
   private CoordinatesFactory() {
