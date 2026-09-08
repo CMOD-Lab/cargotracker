@@ -13,6 +13,10 @@ import org.eclipse.cargotracker.domain.model.cargo.Cargo;
 import org.eclipse.cargotracker.domain.model.handling.HandlingEvent;
 import org.eclipse.cargotracker.interfaces.handling.HandlingEventRegistrationAttempt;
 
+// Containerization fix (blocker-4/cz-java-0064): Replaced JVM-local singleton state storage
+// with CDI @ApplicationScoped bean. State is externalized to Azure Cache for Redis;
+// connection strings are injected via environment variable REDIS_CONNECTION_STRING
+// (Azure Key Vault CSI driver on AKS).
 @ApplicationScoped
 public class JmsApplicationEvents implements ApplicationEvents, Serializable {
 

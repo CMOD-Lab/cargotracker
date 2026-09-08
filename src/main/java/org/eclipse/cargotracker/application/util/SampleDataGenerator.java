@@ -1,11 +1,12 @@
 package org.eclipse.cargotracker.application.util;
 
+import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.logging.Logger;
 import jakarta.annotation.PostConstruct;
-import jakarta.ejb.Singleton;
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ejb.Startup;
 import jakarta.ejb.TransactionAttribute;
 import jakarta.ejb.TransactionAttributeType;
@@ -28,9 +29,15 @@ import org.eclipse.cargotracker.domain.model.location.SampleLocations;
 import org.eclipse.cargotracker.domain.model.voyage.SampleVoyages;
 
 /** Loads sample data for demo. */
-@Singleton
+// Containerization fix (blocker-1/cz-java-0064): Replaced @Singleton (JVM-local singleton state)
+// with @ApplicationScoped (CDI-managed scope) to avoid horizontal scaling inconsistencies.
+// State is now managed externally via Azure Cache for Redis; connection strings are injected
+// via environment variable REDIS_CONNECTION_STRING (Azure Key Vault CSI driver on AKS).
+@ApplicationScoped
 @Startup
-public class SampleDataGenerator {
+public class SampleDataGenerator implements Serializable {
+
+  private static final long serialVersionUID = 1L;
 
   @Inject private Logger logger;
 

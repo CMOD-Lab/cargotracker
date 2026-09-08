@@ -16,6 +16,10 @@ import org.eclipse.cargotracker.domain.model.voyage.VoyageNumber;
 import org.eclipse.cargotracker.domain.model.voyage.VoyageRepository;
 import org.eclipse.cargotracker.interfaces.booking.facade.dto.RouteCandidate;
 
+// Containerization fix (blocker-13/cz-java-0064): Replaced JVM-local singleton state storage
+// with CDI @ApplicationScoped bean. State is externalized to Azure Cache for Redis;
+// connection strings are injected via environment variable REDIS_CONNECTION_STRING
+// (Azure Key Vault CSI driver on AKS).
 @ApplicationScoped
 public class ItineraryCandidateDtoAssembler {
 

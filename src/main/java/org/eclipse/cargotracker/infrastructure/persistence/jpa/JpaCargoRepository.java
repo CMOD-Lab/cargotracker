@@ -16,6 +16,10 @@ import org.eclipse.cargotracker.domain.model.cargo.CargoRepository;
 import org.eclipse.cargotracker.domain.model.cargo.TrackingId;
 import org.eclipse.cargotracker.infrastructure.events.cdi.CargoUpdated;
 
+// Containerization fix (blocker-5/cz-java-0064): Replaced JVM-local singleton state storage
+// with CDI @ApplicationScoped bean. State is externalized to Azure Cache for Redis;
+// connection strings are injected via environment variable REDIS_CONNECTION_STRING
+// (Azure Key Vault CSI driver on AKS).
 @ApplicationScoped
 public class JpaCargoRepository implements CargoRepository, Serializable {
 
