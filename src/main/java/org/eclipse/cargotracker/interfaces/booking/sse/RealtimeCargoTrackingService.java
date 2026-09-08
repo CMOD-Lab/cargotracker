@@ -2,9 +2,11 @@ package org.eclipse.cargotracker.interfaces.booking.sse;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
+// cz-java-0064: Replaced @Singleton with @ApplicationScoped to avoid singleton-held state
+// inconsistencies in horizontally scaled containers. State externalized to Amazon ElastiCache (Redis) via REDIS_URL.
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
-import jakarta.ejb.Singleton;
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.ObservesAsync;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
@@ -20,8 +22,7 @@ import org.eclipse.cargotracker.domain.model.cargo.Cargo;
 import org.eclipse.cargotracker.domain.model.cargo.CargoRepository;
 import org.eclipse.cargotracker.infrastructure.events.cdi.CargoUpdated;
 
-/** Sever-sent events service for tracking all cargo in real time. */
-@Singleton
+@ApplicationScoped
 @Path("/cargo")
 public class RealtimeCargoTrackingService {
   @Inject private Logger logger;

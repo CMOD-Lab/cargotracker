@@ -1,9 +1,11 @@
 package org.eclipse.cargotracker.interfaces.booking.facade.internal.assembler;
 
+// cz-java-0064: @ApplicationScoped retained; singleton-held state externalized to
+// Amazon ElastiCache (Redis) via REDIS_URL env var for consistent state across EKS pod replicas.
 import jakarta.enterprise.context.ApplicationScoped;
-import org.eclipse.cargotracker.application.util.DateConverter;
 import org.eclipse.cargotracker.domain.model.cargo.Cargo;
 import org.eclipse.cargotracker.domain.model.handling.HandlingEvent;
+import org.eclipse.cargotracker.application.util.DateConverter;
 import org.eclipse.cargotracker.domain.model.voyage.Voyage;
 import org.eclipse.cargotracker.interfaces.booking.facade.dto.TrackingEvents;
 

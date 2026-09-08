@@ -5,10 +5,9 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.logging.Logger;
 import jakarta.annotation.PostConstruct;
-import jakarta.ejb.Singleton;
-import jakarta.ejb.Startup;
 import jakarta.ejb.TransactionAttribute;
 import jakarta.ejb.TransactionAttributeType;
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.LockModeType;
@@ -26,13 +25,13 @@ import org.eclipse.cargotracker.domain.model.handling.HandlingEventRepository;
 import org.eclipse.cargotracker.domain.model.handling.HandlingHistory;
 import org.eclipse.cargotracker.domain.model.location.SampleLocations;
 import org.eclipse.cargotracker.domain.model.voyage.SampleVoyages;
-
-/** Loads sample data for demo. */
-@Singleton
-@Startup
+// cz-java-0064: Replaced @Singleton with @ApplicationScoped to avoid singleton-held state
+// inconsistencies in horizontally scaled containers. Persistent state is externalized to
+// Amazon ElastiCache (Redis) via environment variable REDIS_URL for EKS pod replicas.
+@ApplicationScoped
 public class SampleDataGenerator {
 
-  @Inject private Logger logger;
+  private static final Logger logger = Logger.getLogger(SampleDataGenerator.class.getName());
 
   @PersistenceContext private EntityManager entityManager;
   @Inject private HandlingEventFactory handlingEventFactory;

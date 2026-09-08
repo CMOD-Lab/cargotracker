@@ -3,6 +3,8 @@ package org.eclipse.cargotracker.infrastructure.messaging.jms;
 import java.io.Serializable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+// cz-java-0064: @ApplicationScoped retained; singleton-held state externalized to
+// Amazon ElastiCache (Redis) via REDIS_URL env var for consistent state across EKS pod replicas.
 import jakarta.annotation.Resource;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;

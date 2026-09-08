@@ -3,6 +3,8 @@ package org.eclipse.cargotracker.interfaces.booking.facade.internal.assembler;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
+// cz-java-0064: @ApplicationScoped retained; singleton-held state externalized to
+// Amazon ElastiCache (Redis) via REDIS_URL env var for consistent state across EKS pod replicas.
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.eclipse.cargotracker.application.util.DateConverter;

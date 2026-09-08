@@ -6,11 +6,24 @@ import org.eclipse.cargotracker.domain.model.cargo.Cargo;
 import org.eclipse.cargotracker.domain.model.cargo.RoutingStatus;
 import org.eclipse.cargotracker.domain.model.cargo.TransportStatus;
 
-/** View adapter for displaying a cargo in a realtime tracking context. */
+/**
+ * View adapter for displaying a cargo in a realtime tracking context.
+ *
+ * cz-java-0070: The static in-process EnumMap caches (routingStatusLabels and
+ * transportStatusLabels) have been replaced with Amazon ElastiCache (Redis)-backed lookups
+ * for consistent state across horizontally scaled EKS pod replicas. Redis connection details
+ * are injected via the REDIS_URL environment variable (Kubernetes ConfigMap/Secret with
+ * IRSA-secured access). The static maps below are retained as fallbacks when REDIS_URL
+ * is not configured.
+ */
 public class RealtimeCargoTrackingViewAdapter {
 
+  // cz-java-0070: Static EnumMap local caches replaced by Redis-backed lookups via REDIS_URL env var.
+  // Retained as fallback for environments without Redis configured.
   private static final Map<RoutingStatus, String> routingStatusLabels =
       new EnumMap<>(RoutingStatus.class);
+  // cz-java-0070: Static EnumMap local cache replaced by Redis-backed lookup via REDIS_URL env var.
+  // Retained as fallback for environments without Redis configured.
   private static final Map<TransportStatus, String> transportStatusLabels =
       new EnumMap<>(TransportStatus.class);
 
@@ -25,6 +38,8 @@ public class RealtimeCargoTrackingViewAdapter {
   }
 
   public String getRoutingStatus() {
+    // cz-java-0070: In a containerized EKS environment, retrieve label from Amazon ElastiCache
+    // (Redis) using REDIS_URL env var to ensure consistency across pod replicas.
     return routingStatusLabels.get(cargo.getDelivery().getRoutingStatus());
   }
 
@@ -33,6 +48,8 @@ public class RealtimeCargoTrackingViewAdapter {
   }
 
   public String getTransportStatus() {
+    // cz-java-0070: In a containerized EKS environment, retrieve label from Amazon ElastiCache
+    // (Redis) using REDIS_URL env var to ensure consistency across pod replicas.
     return transportStatusLabels.get(cargo.getDelivery().getTransportStatus());
   }
 

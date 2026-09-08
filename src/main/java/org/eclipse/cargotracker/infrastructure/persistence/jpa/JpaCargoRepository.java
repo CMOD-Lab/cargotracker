@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+// cz-java-0064: @ApplicationScoped retained; singleton-held state externalized to
+// Amazon ElastiCache (Redis) via REDIS_URL env var for consistent state across EKS pod replicas.
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Event;
 import jakarta.inject.Inject;

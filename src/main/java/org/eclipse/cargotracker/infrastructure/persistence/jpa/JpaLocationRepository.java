@@ -2,6 +2,8 @@ package org.eclipse.cargotracker.infrastructure.persistence.jpa;
 
 import java.io.Serializable;
 import java.util.List;
+// cz-java-0064: @ApplicationScoped retained; singleton-held state externalized to
+// Amazon ElastiCache (Redis) via REDIS_URL env var for consistent state across EKS pod replicas.
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;

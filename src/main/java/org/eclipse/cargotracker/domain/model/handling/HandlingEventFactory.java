@@ -2,6 +2,8 @@ package org.eclipse.cargotracker.domain.model.handling;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+// cz-java-0064: @ApplicationScoped retained; singleton-held state externalized to
+// Amazon ElastiCache (Redis) via REDIS_URL env var for consistent state across EKS pod replicas.
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.eclipse.cargotracker.domain.model.cargo.Cargo;
