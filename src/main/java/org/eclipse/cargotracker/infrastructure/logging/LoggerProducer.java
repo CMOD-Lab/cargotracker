@@ -2,6 +2,8 @@ package org.eclipse.cargotracker.infrastructure.logging;
 
 import java.io.Serializable;
 import java.util.logging.Logger;
+// cz-java-0064: @ApplicationScoped CDI scope used to avoid JVM-local singleton state.
+// For horizontal scaling on AKS, externalize shared state to Azure Cache for Redis via REDIS_CONNECTION_STRING env var.
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Produces;
 import jakarta.enterprise.inject.spi.InjectionPoint;

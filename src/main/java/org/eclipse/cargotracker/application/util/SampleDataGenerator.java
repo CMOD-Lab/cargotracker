@@ -5,10 +5,9 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.logging.Logger;
 import jakarta.annotation.PostConstruct;
-import jakarta.ejb.Singleton;
-import jakarta.ejb.Startup;
 import jakarta.ejb.TransactionAttribute;
 import jakarta.ejb.TransactionAttributeType;
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.LockModeType;
@@ -27,9 +26,14 @@ import org.eclipse.cargotracker.domain.model.handling.HandlingHistory;
 import org.eclipse.cargotracker.domain.model.location.SampleLocations;
 import org.eclipse.cargotracker.domain.model.voyage.SampleVoyages;
 
-/** Loads sample data for demo. */
-@Singleton
-@Startup
+/**
+ * Loads sample data for demo.
+ *
+ * cz-java-0064: Replaced EJB @Singleton with CDI @ApplicationScoped to avoid JVM-local singleton
+ * state storage. For horizontal scaling on AKS, externalize shared state to Azure Cache for Redis.
+ * Redis connection string should be injected via Azure Key Vault CSI driver env var: REDIS_CONNECTION_STRING
+ */
+@ApplicationScoped
 public class SampleDataGenerator {
 
   @Inject private Logger logger;
