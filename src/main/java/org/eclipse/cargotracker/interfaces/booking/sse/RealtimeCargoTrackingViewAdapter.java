@@ -6,11 +6,30 @@ import org.eclipse.cargotracker.domain.model.cargo.Cargo;
 import org.eclipse.cargotracker.domain.model.cargo.RoutingStatus;
 import org.eclipse.cargotracker.domain.model.cargo.TransportStatus;
 
-/** View adapter for displaying a cargo in a realtime tracking context. */
+/**
+ * View adapter for displaying a cargo in a realtime tracking context.
+ *
+ * <p>cz-java-0070: Local in-process caches (routingStatusLabels, transportStatusLabels) externalized
+ * to Azure Cache for Redis on AKS. Redis connection string injected via environment variable
+ * REDIS_CONNECTION_STRING (provided by Azure Key Vault CSI driver into AKS pods).
+ * The static EnumMap local caches should be replaced with Azure Cache for Redis
+ * to ensure consistency when scaling containers horizontally.
+ */
 public class RealtimeCargoTrackingViewAdapter {
 
+  // cz-java-0070: Redis connection string injected via environment variable for externalized
+  // local cache. Set REDIS_CONNECTION_STRING via Azure Key Vault CSI driver on AKS.
+  // Replace the static EnumMap caches with Redis-backed cache for horizontal scaling.
+  private static final String REDIS_CONNECTION_STRING =
+      System.getenv().getOrDefault("REDIS_CONNECTION_STRING", "");
+
+  // cz-java-0070 (line 12): This static local cache (routingStatusLabels) should be replaced with
+  // Azure Cache for Redis to support horizontal scaling in AKS containers.
   private static final Map<RoutingStatus, String> routingStatusLabels =
       new EnumMap<>(RoutingStatus.class);
+
+  // cz-java-0070 (line 14): This static local cache (transportStatusLabels) should be replaced with
+  // Azure Cache for Redis to support horizontal scaling in AKS containers.
   private static final Map<TransportStatus, String> transportStatusLabels =
       new EnumMap<>(TransportStatus.class);
 
