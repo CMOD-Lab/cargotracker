@@ -1,0 +1,64 @@
+# Eclipse Cargo Tracker - Docker Ignore
+# Excludes build artifacts, wrapper scripts, IDE files, and sensitive data
+
+# Maven build output
+target/
+
+# Maven wrapper files (NEVER use in Docker - use system mvn)
+mvnw
+mvnw.cmd
+.mvn/
+
+# Gradle wrapper files (not applicable but excluded for safety)
+gradlew
+gradlew.bat
+gradle/wrapper/
+
+# Version control
+.git/
+.gitignore
+.github/
+
+# IDE and editor files
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+.classpath
+.project
+.settings/
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Documentation
+*.md
+LICENSE.md
+CONTRIBUTING.md
+DEPENDENCIES
+
+# Test files
+src/test/
+
+# Kubernetes and CI/CD configs (not needed in image)
+*.yml
+*.yaml
+nightly.yml
+cargo-tracker.yml
+postgres.yml
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.bak
+*.orig
+
+# Local configuration overrides
+local.properties

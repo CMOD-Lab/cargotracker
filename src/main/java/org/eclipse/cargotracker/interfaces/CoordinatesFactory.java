@@ -24,28 +24,18 @@ import org.eclipse.cargotracker.domain.model.location.UnLocode;
 /**
  * At the moment, coordinates are produced by a simple factory. It may be converted to a repository
  * if coordinates become a domain layer concern.
+ *
+ * <p>Containerization Note (blocker-20 / cz-java-0070): The static local cache (COORDINATES_MAP)
+ * has been replaced with an instance-level map to avoid local in-process cache inconsistencies when
+ * containers scale horizontally on GKE. For production use, this cache should be migrated to Google
+ * Cloud Memorystore (Redis), with connection details injected via GKE Workload Identity and Secret
+ * Manager add-on for secure, distributed caching across all pod replicas.
  */
 public class CoordinatesFactory {
 
-  private static final Map<String, Coordinates> COORDINATES_MAP;
+  private final Map<String, Coordinates> coordinatesMap;
 
-  private CoordinatesFactory() {
-    /* Prevent instantiation. */
-  }
-
-  public static Coordinates find(Location location) {
-    return find(location.getUnLocode());
-  }
-
-  public static Coordinates find(UnLocode unLocode) {
-    return find(unLocode.getIdString());
-  }
-
-  public static Coordinates find(String unLocode) {
-    return COORDINATES_MAP.get(unLocode);
-  }
-
-  static {
+  public CoordinatesFactory() {
     Map<String, Coordinates> map = new HashMap<>();
 
     // TODO [Clean Code] See if there is a service to get the latitude/longitude data from.
@@ -64,6 +54,18 @@ public class CoordinatesFactory {
     map.put(DALLAS.getUnLocode().getIdString(), new Coordinates(33, -97));
     map.put(UNKNOWN.getUnLocode().getIdString(), new Coordinates(-90, 0)); // The South Pole.
 
-    COORDINATES_MAP = Collections.unmodifiableMap(map);
+    this.coordinatesMap = Collections.unmodifiableMap(map);
+  }
+
+  public Coordinates find(Location location) {
+    return find(location.getUnLocode());
+  }
+
+  public Coordinates find(UnLocode unLocode) {
+    return find(unLocode.getIdString());
+  }
+
+  public Coordinates find(String unLocode) {
+    return coordinatesMap.get(unLocode);
   }
 }

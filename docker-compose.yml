@@ -1,35 +1,50 @@
-# To run the cloud version locally, first build the application using:
-#
-#  ./mvnw clean package -Pcloud
-#      -DpostgreSqlJdbcUrl="jdbc:postgresql://postgres:5432/postgres"
-#      -DpostgreSqlUsername="cargotracker" -DpostgreSqlPassword="cargotracker"
-#
-# Then start the services with:
-#
-#  docker-compose up
-#
-version: '3.8'
+version: "3.9"
+
+# Eclipse Cargo Tracker - Docker Compose (Application Only)
+# NOTE: This file contains ONLY the application service.
+# External services (PostgreSQL, etc.) must be provided separately.
+# Use environment variables to configure external service connections.
 
 services:
-  postgres:
-    image: postgres:16
-    environment:
-      POSTGRES_USER: cargotracker
-      POSTGRES_PASSWORD: cargotracker
-      POSTGRES_DB: postgres
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
-
-  cargotracker:
-    build: .
+  cargo-tracker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: cargo-tracker:latest
+    container_name: cargo-tracker-app
     ports:
       - "8080:8080"
-    depends_on:
-      - postgres
+      - "8081:8081"
     environment:
-      DB_HOST: postgres
+      # JVM Options
+      - JAVA_OPTS=-Xms256m -Xmx512m -XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0
+      # Timezone
+      - TZ=UTC
+      # Database configuration (override for external DB)
+      # For H2 (default/dev): leave DB_JDBC_URL unset or use H2 file path
+      # For PostgreSQL (cloud): set the following variables
+      - DB_JDBC_URL=${DB_JDBC_URL:-jdbc:h2:file:./cargo-tracker-data/cargo-tracker-database}
+      - DB_USER=${DB_USER:-}
+      - DB_PASSWORD=${DB_PASSWORD:-}
+      # Graph traversal service URL
+      - GRAPH_TRAVERSAL_URL=${GRAPH_TRAVERSAL_URL:-http://localhost:8080/rest/graph-traversal/shortest-path}
+    volumes:
+      # Persist H2 database and application data
+      - cargo-tracker-data:/opt/payara/data
+    networks:
+      - app-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "java -cp /opt/payara/payara-micro.jar fish.payara.micro.PayaraMicro --help > /dev/null 2>&1 || exit 1"]
+      interval: 60s
+      timeout: 30s
+      retries: 5
+      start_period: 120s
 
 volumes:
-  postgres-data:
+  cargo-tracker-data:
+    driver: local
+
+networks:
+  app-network:
+    driver: bridge

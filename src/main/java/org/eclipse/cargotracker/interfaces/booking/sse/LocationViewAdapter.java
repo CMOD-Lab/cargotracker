@@ -8,9 +8,16 @@ import org.eclipse.cargotracker.interfaces.CoordinatesFactory;
 public class LocationViewAdapter {
 
   private final Location location;
+  private final CoordinatesFactory coordinatesFactory;
 
   public LocationViewAdapter(Location location) {
     this.location = location;
+    this.coordinatesFactory = new CoordinatesFactory();
+  }
+
+  public LocationViewAdapter(Location location, CoordinatesFactory coordinatesFactory) {
+    this.location = location;
+    this.coordinatesFactory = coordinatesFactory;
   }
 
   public String getUnLocode() {
@@ -22,6 +29,6 @@ public class LocationViewAdapter {
   }
 
   public Coordinates getCoordinates() {
-    return CoordinatesFactory.find(location);
+    return coordinatesFactory.find(location);
   }
 }

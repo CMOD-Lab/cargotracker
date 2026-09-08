@@ -24,6 +24,8 @@
   </issueManagement>
   <properties>
     <maven.compiler.release>11</maven.compiler.release>
+    <maven.compiler.source>11</maven.compiler.source>
+    <maven.compiler.target>11</maven.compiler.target>
     <jakartaee.api.version>10.0.0</jakartaee.api.version>
     <surefire.version>3.5.2</surefire.version>
     <dependency.plugin.version>3.8.1</dependency.plugin.version>
@@ -72,13 +74,9 @@
       <version>14.0.5</version>
       <classifier>jakarta</classifier>
     </dependency>
-    <!-- We need a Jersey specific dependency for property name constants -->
-    <dependency>
-      <groupId>org.glassfish.jersey.core</groupId>
-      <artifactId>jersey-server</artifactId>
-      <version>3.1.10</version>
-      <scope>provided</scope>
-    </dependency>    
+    <!-- blocker-19 / cz-java-0076: Removed GlassFish/Jersey-specific jersey-server dependency.
+         RestConfiguration now uses standard Jakarta REST Application without GlassFish-specific
+         ServerProperties, ensuring compatibility across container runtime environments. -->
     <!-- Test dependencies -->
     <dependency>
       <groupId>org.junit.jupiter</groupId>
@@ -124,6 +122,14 @@
   <build>
     <finalName>cargo-tracker</finalName>
     <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.13.0</version>
+        <configuration>
+          <release>11</release>
+        </configuration>
+      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-war-plugin</artifactId>

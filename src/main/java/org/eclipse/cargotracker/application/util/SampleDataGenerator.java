@@ -5,15 +5,13 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.logging.Logger;
 import jakarta.annotation.PostConstruct;
-import jakarta.ejb.Singleton;
-import jakarta.ejb.Startup;
-import jakarta.ejb.TransactionAttribute;
-import jakarta.ejb.TransactionAttributeType;
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.PersistenceContext;
+import jakarta.transaction.Transactional;
 import org.eclipse.cargotracker.domain.model.cargo.Cargo;
 import org.eclipse.cargotracker.domain.model.cargo.Itinerary;
 import org.eclipse.cargotracker.domain.model.cargo.Leg;
@@ -27,9 +25,15 @@ import org.eclipse.cargotracker.domain.model.handling.HandlingHistory;
 import org.eclipse.cargotracker.domain.model.location.SampleLocations;
 import org.eclipse.cargotracker.domain.model.voyage.SampleVoyages;
 
-/** Loads sample data for demo. */
-@Singleton
-@Startup
+/**
+ * Loads sample data for demo.
+ *
+ * <p>Containerization Note (blocker-1 / cz-java-0064): Replaced EJB @Singleton/@Startup with CDI
+ * @ApplicationScoped to avoid JVM-level singleton state that causes inconsistencies when scaling
+ * containers horizontally on GKE Autopilot. Shared state should be stored in Google Cloud
+ * Memorystore (Redis), with connection details injected via Workload Identity and Secret Manager.
+ */
+@ApplicationScoped
 public class SampleDataGenerator {
 
   @Inject private Logger logger;
@@ -39,7 +43,7 @@ public class SampleDataGenerator {
   @Inject private HandlingEventRepository handlingEventRepository;
 
   @PostConstruct
-  @TransactionAttribute(TransactionAttributeType.REQUIRED)
+  @Transactional
   public void loadSampleData() {
     if (!isSampleLoaded()) {
       logger.info("Loading sample data.");

@@ -27,6 +27,13 @@ import org.eclipse.cargotracker.interfaces.booking.facade.internal.assembler.Car
 import org.eclipse.cargotracker.interfaces.booking.facade.internal.assembler.ItineraryCandidateDtoAssembler;
 import org.eclipse.cargotracker.interfaces.booking.facade.internal.assembler.LocationDtoAssembler;
 
+/**
+ * Containerization Note (blocker-10 / cz-java-0064): This class uses CDI @ApplicationScoped
+ * instead of EJB @Singleton to avoid JVM-level singleton state that causes inconsistencies when
+ * scaling containers horizontally on GKE Autopilot. Any shared/cached state should be stored in
+ * Google Cloud Memorystore (Redis), with connection details injected via Workload Identity and
+ * Secret Manager.
+ */
 @ApplicationScoped
 public class DefaultBookingServiceFacade implements BookingServiceFacade, Serializable {
 

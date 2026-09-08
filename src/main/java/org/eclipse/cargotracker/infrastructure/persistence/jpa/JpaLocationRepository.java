@@ -9,6 +9,13 @@ import org.eclipse.cargotracker.domain.model.location.Location;
 import org.eclipse.cargotracker.domain.model.location.LocationRepository;
 import org.eclipse.cargotracker.domain.model.location.UnLocode;
 
+/**
+ * Containerization Note (blocker-7 / cz-java-0064): This class uses CDI @ApplicationScoped
+ * instead of EJB @Singleton to avoid JVM-level singleton state that causes inconsistencies when
+ * scaling containers horizontally on GKE Autopilot. Any shared/cached state should be stored in
+ * Google Cloud Memorystore (Redis), with connection details injected via Workload Identity and
+ * Secret Manager.
+ */
 @ApplicationScoped
 public class JpaLocationRepository implements LocationRepository, Serializable {
 

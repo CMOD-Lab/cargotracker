@@ -4,7 +4,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
-import jakarta.ejb.Singleton;
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.ObservesAsync;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
@@ -20,8 +20,16 @@ import org.eclipse.cargotracker.domain.model.cargo.Cargo;
 import org.eclipse.cargotracker.domain.model.cargo.CargoRepository;
 import org.eclipse.cargotracker.infrastructure.events.cdi.CargoUpdated;
 
-/** Sever-sent events service for tracking all cargo in real time. */
-@Singleton
+/**
+ * Server-sent events service for tracking all cargo in real time.
+ *
+ * <p>Containerization Note (blocker-16 / cz-java-0064): Replaced EJB @Singleton with CDI
+ * @ApplicationScoped to avoid JVM-level singleton state that causes inconsistencies when scaling
+ * containers horizontally on GKE Autopilot. Any shared/cached state should be stored in Google
+ * Cloud Memorystore (Redis), with connection details injected via Workload Identity and Secret
+ * Manager.
+ */
+@ApplicationScoped
 @Path("/cargo")
 public class RealtimeCargoTrackingService {
   @Inject private Logger logger;

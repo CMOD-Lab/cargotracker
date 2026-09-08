@@ -1,0 +1,90 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cargo-tracker
+  namespace: cargo-tracker
+  labels:
+    app: cargo-tracker
+    version: "3.1-SNAPSHOT"
+    component: backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: cargo-tracker
+  template:
+    metadata:
+      labels:
+        app: cargo-tracker
+        version: "3.1-SNAPSHOT"
+        component: backend
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      containers:
+        - name: cargo-tracker
+          image: "{{IMAGE_URI}}"
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+            - name: https
+              containerPort: 8081
+              protocol: TCP
+          env:
+            # JVM Options
+            - name: JAVA_OPTS
+              value: "-Xms256m -Xmx512m -XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:+UnlockExperimentalVMOptions"
+            # Timezone
+            - name: TZ
+              value: "UTC"
+            # Database configuration
+            # For H2 (default): leave DB_JDBC_URL as H2 file path
+            # For PostgreSQL (cloud): override with actual PostgreSQL JDBC URL
+            - name: DB_JDBC_URL
+              value: "{{DB_JDBC_URL}}"
+            - name: DB_USER
+              value: "{{DB_USER}}"
+            - name: DB_PASSWORD
+              value: "{{DB_PASSWORD}}"
+            # Graph traversal service URL (internal service or external endpoint)
+            - name: GRAPH_TRAVERSAL_URL
+              value: "{{GRAPH_TRAVERSAL_URL}}"
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "500m"
+              memory: "1Gi"
+          livenessProbe:
+            httpGet:
+              path: /rest/health
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 120
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+            successThreshold: 1
+          readinessProbe:
+            httpGet:
+              path: /rest/health
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 90
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 3
+            successThreshold: 1
+          volumeMounts:
+            - name: cargo-tracker-data
+              mountPath: /opt/payara/data
+      volumes:
+        - name: cargo-tracker-data
+          emptyDir: {}
+      terminationGracePeriodSeconds: 60
+      restartPolicy: Always
