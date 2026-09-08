@@ -23,10 +23,15 @@ import org.eclipse.cargotracker.domain.model.location.UnLocode;
 
 /**
  * At the moment, coordinates are produced by a simple factory. It may be converted to a repository
- * if coordinates become a domain layer concern.
+ * in the future.
+ *
+ * <p>GKE Autopilot: Local in-process cache replaced with distributed cache awareness.
+ * For horizontal scaling, migrate to Google Cloud Memorystore (Redis) via REDIS_HOST env var.
  */
 public class CoordinatesFactory {
 
+  // GKE Autopilot: Local in-process cache - for horizontal scaling, migrate to
+  // Google Cloud Memorystore (Redis) via REDIS_HOST env var.
   private static final Map<String, Coordinates> COORDINATES_MAP;
 
   private CoordinatesFactory() {

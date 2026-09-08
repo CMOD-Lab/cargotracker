@@ -16,10 +16,10 @@ import org.eclipse.cargotracker.domain.model.cargo.CargoRepository;
 import org.eclipse.cargotracker.domain.model.cargo.TrackingId;
 import org.eclipse.cargotracker.infrastructure.events.cdi.CargoUpdated;
 
+// GKE Autopilot: @ApplicationScoped bean - for distributed state across pods,
+// use Google Cloud Memorystore (Redis) via REDIS_HOST env var instead of JVM-local state.
 @ApplicationScoped
 public class JpaCargoRepository implements CargoRepository, Serializable {
-
-  private static final long serialVersionUID = 1L;
 
   @Inject private Logger logger;
 

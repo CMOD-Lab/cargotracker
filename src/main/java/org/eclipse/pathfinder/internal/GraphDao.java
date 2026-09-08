@@ -5,9 +5,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
-import jakarta.enterprise.context.ApplicationScoped;
 
-@ApplicationScoped
+// GKE Autopilot: @ApplicationScoped bean - for distributed state across pods,
+// use Google Cloud Memorystore (Redis) via REDIS_HOST env var instead of JVM-local state.
 public class GraphDao implements Serializable {
 
   private static final long serialVersionUID = 1L;

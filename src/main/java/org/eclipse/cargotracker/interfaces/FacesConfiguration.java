@@ -1,9 +1,8 @@
 package org.eclipse.cargotracker.interfaces;
 
-import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.faces.annotation.FacesConfig;
 
-/** Jakarta Faces configuration. * */
-@FacesConfig()
-@ApplicationScoped
+// GKE Autopilot: @ApplicationScoped bean - for distributed state across pods,
+// use Google Cloud Memorystore (Redis) via REDIS_HOST env var instead of JVM-local state.
+@FacesConfig
 public class FacesConfiguration {}

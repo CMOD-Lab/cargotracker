@@ -5,10 +5,9 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.logging.Logger;
 import jakarta.annotation.PostConstruct;
-import jakarta.ejb.Singleton;
-import jakarta.ejb.Startup;
 import jakarta.ejb.TransactionAttribute;
 import jakarta.ejb.TransactionAttributeType;
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.LockModeType;
@@ -27,12 +26,12 @@ import org.eclipse.cargotracker.domain.model.handling.HandlingHistory;
 import org.eclipse.cargotracker.domain.model.location.SampleLocations;
 import org.eclipse.cargotracker.domain.model.voyage.SampleVoyages;
 
-/** Loads sample data for demo. */
-@Singleton
-@Startup
+// GKE Autopilot: Replaced EJB @Singleton with CDI @ApplicationScoped to avoid JVM-local singleton state.
+// For distributed state across pods, use Google Cloud Memorystore (Redis) via REDIS_HOST env var.
+@ApplicationScoped
 public class SampleDataGenerator {
 
-  @Inject private Logger logger;
+  private static final Logger logger = Logger.getLogger(SampleDataGenerator.class.getName());
 
   @PersistenceContext private EntityManager entityManager;
   @Inject private HandlingEventFactory handlingEventFactory;

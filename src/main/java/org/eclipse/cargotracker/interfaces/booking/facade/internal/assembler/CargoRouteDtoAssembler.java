@@ -11,6 +11,8 @@ import org.eclipse.cargotracker.domain.model.cargo.TransportStatus;
 import org.eclipse.cargotracker.interfaces.booking.facade.dto.CargoRoute;
 import org.eclipse.cargotracker.interfaces.booking.facade.dto.Leg;
 
+// GKE Autopilot: @ApplicationScoped bean - for distributed state across pods,
+// use Google Cloud Memorystore (Redis) via REDIS_HOST env var instead of JVM-local state.
 @ApplicationScoped
 public class CargoRouteDtoAssembler {
 

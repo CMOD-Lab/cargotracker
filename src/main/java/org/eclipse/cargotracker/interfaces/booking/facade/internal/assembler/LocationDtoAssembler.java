@@ -6,6 +6,8 @@ import java.util.stream.Collectors;
 import jakarta.enterprise.context.ApplicationScoped;
 import org.eclipse.cargotracker.domain.model.location.Location;
 
+// GKE Autopilot: @ApplicationScoped bean - for distributed state across pods,
+// use Google Cloud Memorystore (Redis) via REDIS_HOST env var instead of JVM-local state.
 @ApplicationScoped
 public class LocationDtoAssembler {
 

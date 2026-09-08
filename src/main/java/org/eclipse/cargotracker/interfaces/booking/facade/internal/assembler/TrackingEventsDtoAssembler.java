@@ -7,6 +7,8 @@ import org.eclipse.cargotracker.domain.model.handling.HandlingEvent;
 import org.eclipse.cargotracker.domain.model.voyage.Voyage;
 import org.eclipse.cargotracker.interfaces.booking.facade.dto.TrackingEvents;
 
+// GKE Autopilot: @ApplicationScoped bean - for distributed state across pods,
+// use Google Cloud Memorystore (Redis) via REDIS_HOST env var instead of JVM-local state.
 @ApplicationScoped
 public class TrackingEventsDtoAssembler {
 
