@@ -1,35 +1,43 @@
-# To run the cloud version locally, first build the application using:
-#
-#  ./mvnw clean package -Pcloud
-#      -DpostgreSqlJdbcUrl="jdbc:postgresql://postgres:5432/postgres"
-#      -DpostgreSqlUsername="cargotracker" -DpostgreSqlPassword="cargotracker"
-#
-# Then start the services with:
-#
-#  docker-compose up
-#
 version: '3.8'
 
-services:
-  postgres:
-    image: postgres:16
-    environment:
-      POSTGRES_USER: cargotracker
-      POSTGRES_PASSWORD: cargotracker
-      POSTGRES_DB: postgres
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
+# Eclipse Cargo Tracker - Application Service Only
+# External services (PostgreSQL) must be provided separately via environment variables.
+# Build the cloud profile WAR before running:
+#   mvn clean package -Pcloud -DskipTests \
+#       -DpostgreSqlJdbcUrl="jdbc:postgresql://<DB_HOST>:5432/<DB_NAME>" \
+#       -DpostgreSqlUsername="<DB_USER>" -DpostgreSqlPassword="<DB_PASSWORD>"
 
-  cargotracker:
-    build: .
+services:
+  cargo-tracker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: cargo-tracker:latest
+    container_name: cargo-tracker-app
     ports:
       - "8080:8080"
-    depends_on:
-      - postgres
     environment:
-      DB_HOST: postgres
+      # JVM Options
+      JAVA_OPTS: "-Xmx512m -Xms256m -XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0"
+      TZ: "UTC"
+      # Database connection (provide external PostgreSQL details)
+      DB_HOST: "${DB_HOST:-localhost}"
+      DB_PORT: "${DB_PORT:-5432}"
+      DB_NAME: "${DB_NAME:-postgres}"
+      DB_USER: "${DB_USER:-postgres}"
+      DB_PASSWORD: "${DB_PASSWORD:-postgres}"
+      # Application configuration
+      GRAPH_TRAVERSAL_URL: "${GRAPH_TRAVERSAL_URL:-http://localhost:8080/rest/graph-traversal/shortest-path}"
+    volumes:
+      - cargo-tracker-data:/opt/payara/cargo-tracker-data
+    restart: unless-stopped
+    networks:
+      - app-network
 
 volumes:
-  postgres-data:
+  cargo-tracker-data:
+    driver: local
+
+networks:
+  app-network:
+    driver: bridge

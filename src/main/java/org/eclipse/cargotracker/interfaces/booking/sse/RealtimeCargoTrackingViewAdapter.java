@@ -6,18 +6,41 @@ import org.eclipse.cargotracker.domain.model.cargo.Cargo;
 import org.eclipse.cargotracker.domain.model.cargo.RoutingStatus;
 import org.eclipse.cargotracker.domain.model.cargo.TransportStatus;
 
-/** View adapter for displaying a cargo in a realtime tracking context. */
+/**
+ * View adapter for displaying a cargo in a realtime tracking context.
+ *
+ * Blocker blocker-21 (cz-java-0070): Replaced static local cache (routingStatusLabels) with
+ * instance-level map to avoid shared in-process state that does not replicate across container
+ * replicas. For distributed caching across pods, use Google Cloud Memorystore (Redis) on GKE,
+ * injecting connection details via environment variables: REDIS_HOST, REDIS_PORT.
+ *
+ * Blocker blocker-22 (cz-java-0070): Replaced static local cache (transportStatusLabels) with
+ * instance-level map to avoid shared in-process state that does not replicate across container
+ * replicas. For distributed caching across pods, use Google Cloud Memorystore (Redis) on GKE,
+ * injecting connection details via environment variables: REDIS_HOST, REDIS_PORT.
+ */
 public class RealtimeCargoTrackingViewAdapter {
 
-  private static final Map<RoutingStatus, String> routingStatusLabels =
-      new EnumMap<>(RoutingStatus.class);
-  private static final Map<TransportStatus, String> transportStatusLabels =
-      new EnumMap<>(TransportStatus.class);
+  // Instance-level maps replace static local caches to avoid horizontal scaling inconsistencies.
+  private final Map<RoutingStatus, String> routingStatusLabels;
+  private final Map<TransportStatus, String> transportStatusLabels;
 
   private final Cargo cargo;
 
   public RealtimeCargoTrackingViewAdapter(Cargo cargo) {
     this.cargo = cargo;
+
+    this.routingStatusLabels = new EnumMap<>(RoutingStatus.class);
+    this.routingStatusLabels.put(RoutingStatus.NOT_ROUTED, "Not routed");
+    this.routingStatusLabels.put(RoutingStatus.ROUTED, "Routed");
+    this.routingStatusLabels.put(RoutingStatus.MISROUTED, "Misrouted");
+
+    this.transportStatusLabels = new EnumMap<>(TransportStatus.class);
+    this.transportStatusLabels.put(TransportStatus.NOT_RECEIVED, "Not received");
+    this.transportStatusLabels.put(TransportStatus.IN_PORT, "In port");
+    this.transportStatusLabels.put(TransportStatus.ONBOARD_CARRIER, "Onboard carrier");
+    this.transportStatusLabels.put(TransportStatus.CLAIMED, "Claimed");
+    this.transportStatusLabels.put(TransportStatus.UNKNOWN, "Unknown");
   }
 
   public String getTrackingId() {
@@ -70,17 +93,5 @@ public class RealtimeCargoTrackingViewAdapter {
     }
 
     return cargo.getDelivery().getTransportStatus().toString();
-  }
-
-  static {
-    routingStatusLabels.put(RoutingStatus.NOT_ROUTED, "Not routed");
-    routingStatusLabels.put(RoutingStatus.ROUTED, "Routed");
-    routingStatusLabels.put(RoutingStatus.MISROUTED, "Misrouted");
-
-    transportStatusLabels.put(TransportStatus.NOT_RECEIVED, "Not received");
-    transportStatusLabels.put(TransportStatus.IN_PORT, "In port");
-    transportStatusLabels.put(TransportStatus.ONBOARD_CARRIER, "Onboard carrier");
-    transportStatusLabels.put(TransportStatus.CLAIMED, "Claimed");
-    transportStatusLabels.put(TransportStatus.UNKNOWN, "Unknown");
   }
 }

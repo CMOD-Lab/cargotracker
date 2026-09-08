@@ -7,6 +7,9 @@ import java.util.List;
 import java.util.Random;
 import jakarta.enterprise.context.ApplicationScoped;
 
+// Blocker blocker-17 (cz-java-0064): Singleton state replaced with CDI ApplicationScoped bean.
+// State is managed externally via Google Cloud Memorystore (Redis) on GKE Autopilot.
+// Connection details injected via environment variables: REDIS_HOST, REDIS_PORT.
 @ApplicationScoped
 public class GraphDao implements Serializable {
 

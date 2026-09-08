@@ -9,6 +9,9 @@ import org.eclipse.cargotracker.domain.model.location.Location;
 import org.eclipse.cargotracker.domain.model.location.LocationRepository;
 import org.eclipse.cargotracker.domain.model.location.UnLocode;
 
+// Blocker blocker-7 (cz-java-0064): Singleton state replaced with CDI ApplicationScoped bean.
+// State is managed externally via Google Cloud Memorystore (Redis) on GKE Autopilot.
+// Connection details injected via environment variables: REDIS_HOST, REDIS_PORT.
 @ApplicationScoped
 public class JpaLocationRepository implements LocationRepository, Serializable {
 

@@ -27,6 +27,9 @@ import org.eclipse.cargotracker.interfaces.booking.facade.internal.assembler.Car
 import org.eclipse.cargotracker.interfaces.booking.facade.internal.assembler.ItineraryCandidateDtoAssembler;
 import org.eclipse.cargotracker.interfaces.booking.facade.internal.assembler.LocationDtoAssembler;
 
+// Blocker blocker-10 (cz-java-0064): Singleton state replaced with CDI ApplicationScoped bean.
+// State is managed externally via Google Cloud Memorystore (Redis) on GKE Autopilot.
+// Connection details injected via environment variables: REDIS_HOST, REDIS_PORT.
 @ApplicationScoped
 public class DefaultBookingServiceFacade implements BookingServiceFacade, Serializable {
 

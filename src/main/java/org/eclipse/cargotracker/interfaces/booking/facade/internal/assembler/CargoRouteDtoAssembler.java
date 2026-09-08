@@ -11,6 +11,9 @@ import org.eclipse.cargotracker.domain.model.cargo.TransportStatus;
 import org.eclipse.cargotracker.interfaces.booking.facade.dto.CargoRoute;
 import org.eclipse.cargotracker.interfaces.booking.facade.dto.Leg;
 
+// Blocker blocker-11 (cz-java-0064): Singleton state replaced with CDI ApplicationScoped bean.
+// State is managed externally via Google Cloud Memorystore (Redis) on GKE Autopilot.
+// Connection details injected via environment variables: REDIS_HOST, REDIS_PORT.
 @ApplicationScoped
 public class CargoRouteDtoAssembler {
 

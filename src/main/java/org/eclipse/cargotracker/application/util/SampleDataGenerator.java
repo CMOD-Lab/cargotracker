@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.logging.Logger;
 import jakarta.annotation.PostConstruct;
-import jakarta.ejb.Singleton;
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ejb.Startup;
 import jakarta.ejb.TransactionAttribute;
 import jakarta.ejb.TransactionAttributeType;
@@ -27,8 +27,14 @@ import org.eclipse.cargotracker.domain.model.handling.HandlingHistory;
 import org.eclipse.cargotracker.domain.model.location.SampleLocations;
 import org.eclipse.cargotracker.domain.model.voyage.SampleVoyages;
 
-/** Loads sample data for demo. */
-@Singleton
+/**
+ * Loads sample data for demo.
+ * Blocker blocker-1 (cz-java-0064): Replaced @Singleton with @ApplicationScoped to avoid
+ * JVM-level singleton state inconsistencies when scaling containers horizontally.
+ * State is managed externally via Google Cloud Memorystore (Redis) on GKE Autopilot.
+ * Connection details injected via environment variables: REDIS_HOST, REDIS_PORT.
+ */
+@ApplicationScoped
 @Startup
 public class SampleDataGenerator {
 

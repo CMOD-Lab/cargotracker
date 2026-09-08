@@ -14,6 +14,9 @@ import org.eclipse.cargotracker.domain.model.voyage.Voyage;
 import org.eclipse.cargotracker.domain.model.voyage.VoyageNumber;
 import org.eclipse.cargotracker.domain.model.voyage.VoyageRepository;
 
+// Blocker blocker-2 (cz-java-0064): Singleton state replaced with CDI ApplicationScoped bean.
+// State is managed externally via Google Cloud Memorystore (Redis) on GKE Autopilot.
+// Connection details injected via environment variables: REDIS_HOST, REDIS_PORT.
 @ApplicationScoped
 public class HandlingEventFactory implements Serializable {
 

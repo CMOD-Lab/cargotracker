@@ -17,9 +17,11 @@ public class CargoTrackingViewAdapter {
 
   private final Cargo cargo;
   private final List<HandlingEventViewAdapter> events;
+  private final CoordinatesFactory coordinatesFactory;
 
   public CargoTrackingViewAdapter(Cargo cargo, List<HandlingEvent> handlingEvents) {
     this.cargo = cargo;
+    this.coordinatesFactory = new CoordinatesFactory();
     this.events = new ArrayList<>(handlingEvents.size());
 
     handlingEvents.stream().map(HandlingEventViewAdapter::new).forEach(events::add);
@@ -38,7 +40,7 @@ public class CargoTrackingViewAdapter {
   }
 
   public Coordinates getOriginCoordinates() {
-    return CoordinatesFactory.find(cargo.getRouteSpecification().getOrigin());
+    return coordinatesFactory.find(cargo.getRouteSpecification().getOrigin());
   }
 
   public String getDestinationName() {
@@ -50,7 +52,7 @@ public class CargoTrackingViewAdapter {
   }
 
   public Coordinates getDestinationCoordinates() {
-    return CoordinatesFactory.find(cargo.getRouteSpecification().getDestination());
+    return coordinatesFactory.find(cargo.getRouteSpecification().getDestination());
   }
 
   public String getLastKnownLocationName() {
@@ -64,7 +66,7 @@ public class CargoTrackingViewAdapter {
   }
 
   public Coordinates getLastKnownLocationCoordinates() {
-    return CoordinatesFactory.find(cargo.getDelivery().getLastKnownLocation());
+    return coordinatesFactory.find(cargo.getDelivery().getLastKnownLocation());
   }
 
   public String getStatusCode() {

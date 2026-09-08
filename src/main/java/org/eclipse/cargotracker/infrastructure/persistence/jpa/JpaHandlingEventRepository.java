@@ -9,6 +9,9 @@ import org.eclipse.cargotracker.domain.model.handling.HandlingEvent;
 import org.eclipse.cargotracker.domain.model.handling.HandlingEventRepository;
 import org.eclipse.cargotracker.domain.model.handling.HandlingHistory;
 
+// Blocker blocker-6 (cz-java-0064): Singleton state replaced with CDI ApplicationScoped bean.
+// State is managed externally via Google Cloud Memorystore (Redis) on GKE Autopilot.
+// Connection details injected via environment variables: REDIS_HOST, REDIS_PORT.
 @ApplicationScoped
 public class JpaHandlingEventRepository implements HandlingEventRepository, Serializable {
 
