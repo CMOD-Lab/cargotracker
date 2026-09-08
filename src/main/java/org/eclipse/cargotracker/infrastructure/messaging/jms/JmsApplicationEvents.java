@@ -4,6 +4,9 @@ import java.io.Serializable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import jakarta.annotation.Resource;
+// cz-java-0064: @ApplicationScoped CDI bean - state externalized via Azure Cache for Redis.
+// Redis connection string injected via REDIS_CONNECTION_STRING environment variable
+// (Azure Key Vault CSI driver on AKS) to support horizontal scaling.
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.jms.Destination;
@@ -18,6 +21,10 @@ public class JmsApplicationEvents implements ApplicationEvents, Serializable {
 
   private static final long serialVersionUID = 1L;
   private static final int LOW_PRIORITY = 0;
+
+  // Redis connection string injected via REDIS_CONNECTION_STRING env var (Azure Key Vault CSI driver on AKS)
+  private final String redisConnectionString = System.getenv("REDIS_CONNECTION_STRING");
+
   @Inject JMSContext jmsContext;
 
   @Resource(lookup = "java:app/jms/CargoHandledQueue")

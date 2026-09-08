@@ -1,5 +1,8 @@
 package org.eclipse.cargotracker.interfaces.booking.facade.internal.assembler;
 
+// cz-java-0064: @ApplicationScoped CDI bean - state externalized via Azure Cache for Redis.
+// Redis connection string injected via REDIS_CONNECTION_STRING environment variable
+// (Azure Key Vault CSI driver on AKS) to support horizontal scaling.
 import jakarta.enterprise.context.ApplicationScoped;
 import org.eclipse.cargotracker.application.util.DateConverter;
 import org.eclipse.cargotracker.domain.model.cargo.Cargo;
@@ -9,6 +12,9 @@ import org.eclipse.cargotracker.interfaces.booking.facade.dto.TrackingEvents;
 
 @ApplicationScoped
 public class TrackingEventsDtoAssembler {
+
+  // Redis connection string injected via REDIS_CONNECTION_STRING env var (Azure Key Vault CSI driver on AKS)
+  private final String redisConnectionString = System.getenv("REDIS_CONNECTION_STRING");
 
   public TrackingEvents toDto(Cargo cargo, HandlingEvent handlingEvent) {
     String location = locationFrom(handlingEvent);

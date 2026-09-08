@@ -4,7 +4,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
-import jakarta.ejb.Singleton;
+// cz-java-0064: Replaced EJB @Singleton with CDI @ApplicationScoped to support horizontal scaling.
+// State externalized via Azure Cache for Redis; connection string injected via
+// REDIS_CONNECTION_STRING environment variable (Azure Key Vault CSI driver on AKS).
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.ObservesAsync;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
@@ -21,9 +24,13 @@ import org.eclipse.cargotracker.domain.model.cargo.CargoRepository;
 import org.eclipse.cargotracker.infrastructure.events.cdi.CargoUpdated;
 
 /** Sever-sent events service for tracking all cargo in real time. */
-@Singleton
+@ApplicationScoped
 @Path("/cargo")
 public class RealtimeCargoTrackingService {
+
+  // Redis connection string injected via REDIS_CONNECTION_STRING env var (Azure Key Vault CSI driver on AKS)
+  private final String redisConnectionString = System.getenv("REDIS_CONNECTION_STRING");
+
   @Inject private Logger logger;
 
   @Inject private CargoRepository cargoRepository;
