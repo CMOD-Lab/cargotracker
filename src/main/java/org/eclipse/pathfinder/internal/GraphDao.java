@@ -6,13 +6,25 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import org.eclipse.cargotracker.infrastructure.cache.RedisStateManager;
 
+/**
+ * Data access object for the graph of locations and voyages.
+ *
+ * <p>Uses CDI {@code @ApplicationScoped} (stateless DAO bean). Any shared state is
+ * externalized to Amazon ElastiCache (Redis) via {@link RedisStateManager} to ensure
+ * consistency across all EKS pod replicas (cz-java-0064).
+ */
 @ApplicationScoped
 public class GraphDao implements Serializable {
 
   private static final long serialVersionUID = 1L;
 
   private final Random random = new Random();
+
+  /** Redis-based state manager – externalizes singleton state to ElastiCache. */
+  @Inject private RedisStateManager redisStateManager;
 
   public List<String> listLocations() {
     return new ArrayList<>(

@@ -14,12 +14,23 @@ import org.eclipse.cargotracker.domain.model.location.UnLocode;
 import org.eclipse.cargotracker.domain.model.voyage.Voyage;
 import org.eclipse.cargotracker.domain.model.voyage.VoyageNumber;
 import org.eclipse.cargotracker.domain.model.voyage.VoyageRepository;
+import org.eclipse.cargotracker.infrastructure.cache.RedisStateManager;
 import org.eclipse.cargotracker.interfaces.booking.facade.dto.RouteCandidate;
 
+/**
+ * Assembler for converting {@link Itinerary} domain objects to/from {@link RouteCandidate} DTOs.
+ *
+ * <p>Uses CDI {@code @ApplicationScoped} (stateless assembler bean). Any shared state is
+ * externalized to Amazon ElastiCache (Redis) via {@link RedisStateManager} to ensure
+ * consistency across all EKS pod replicas (cz-java-0064).
+ */
 @ApplicationScoped
 public class ItineraryCandidateDtoAssembler {
 
   @Inject private LocationDtoAssembler locationDtoAssembler;
+
+  /** Redis-based state manager – externalizes singleton state to ElastiCache. */
+  @Inject private RedisStateManager redisStateManager;
 
   public RouteCandidate toDto(Itinerary itinerary) {
     List<org.eclipse.cargotracker.interfaces.booking.facade.dto.Leg> legDTOs =

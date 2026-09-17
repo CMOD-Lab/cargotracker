@@ -10,13 +10,24 @@ import org.eclipse.cargotracker.domain.model.cargo.Cargo;
 import org.eclipse.cargotracker.domain.model.cargo.Delivery;
 import org.eclipse.cargotracker.domain.model.cargo.HandlingActivity;
 import org.eclipse.cargotracker.domain.model.handling.HandlingEvent;
+import org.eclipse.cargotracker.infrastructure.cache.RedisStateManager;
 import org.eclipse.cargotracker.interfaces.booking.facade.dto.CargoStatus;
 import org.eclipse.cargotracker.interfaces.booking.facade.dto.TrackingEvents;
 
+/**
+ * Assembler for converting {@link Cargo} domain objects to {@link CargoStatus} DTOs.
+ *
+ * <p>Uses CDI {@code @ApplicationScoped} (stateless assembler bean). Any shared state is
+ * externalized to Amazon ElastiCache (Redis) via {@link RedisStateManager} to ensure
+ * consistency across all EKS pod replicas (cz-java-0064).
+ */
 @ApplicationScoped
 public class CargoStatusDtoAssembler {
 
   @Inject private TrackingEventsDtoAssembler assembler;
+
+  /** Redis-based state manager – externalizes singleton state to ElastiCache. */
+  @Inject private RedisStateManager redisStateManager;
 
   public CargoStatus toDto(Cargo cargo, List<HandlingEvent> handlingEvents) {
     List<TrackingEvents> trackingEvents;

@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.logging.Logger;
 import jakarta.annotation.PostConstruct;
-import jakarta.ejb.Singleton;
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ejb.Startup;
 import jakarta.ejb.TransactionAttribute;
 import jakarta.ejb.TransactionAttributeType;
@@ -26,17 +26,29 @@ import org.eclipse.cargotracker.domain.model.handling.HandlingEventRepository;
 import org.eclipse.cargotracker.domain.model.handling.HandlingHistory;
 import org.eclipse.cargotracker.domain.model.location.SampleLocations;
 import org.eclipse.cargotracker.domain.model.voyage.SampleVoyages;
+import org.eclipse.cargotracker.infrastructure.cache.RedisStateManager;
 
-/** Loads sample data for demo. */
-@Singleton
+/**
+ * Loads sample data for demo.
+ *
+ * <p>Replaced EJB {@code @Singleton} with CDI {@code @ApplicationScoped} to externalize
+ * singleton state to Amazon ElastiCache (Redis) via {@link RedisStateManager}, ensuring
+ * all EKS pod replicas share a single consistent data store (cz-java-0064).
+ */
+@ApplicationScoped
 @Startup
 public class SampleDataGenerator {
+
+  private static final String SAMPLE_DATA_LOADED_KEY = "cargotracker:sampleDataLoaded";
 
   @Inject private Logger logger;
 
   @PersistenceContext private EntityManager entityManager;
   @Inject private HandlingEventFactory handlingEventFactory;
   @Inject private HandlingEventRepository handlingEventRepository;
+
+  /** Redis-based state manager – externalizes singleton state to ElastiCache. */
+  @Inject private RedisStateManager redisStateManager;
 
   @PostConstruct
   @TransactionAttribute(TransactionAttributeType.REQUIRED)
@@ -46,12 +58,19 @@ public class SampleDataGenerator {
       loadSampleLocations();
       loadSampleVoyages();
       loadSampleCargos();
+      // Persist the loaded flag in Redis so all pod replicas see it
+      redisStateManager.set(SAMPLE_DATA_LOADED_KEY, "true", 0);
     } else {
       logger.info("Sample data already loaded, skipping.");
     }
   }
 
   private boolean isSampleLoaded() {
+    // Check Redis first for cross-pod consistency
+    if (redisStateManager.exists(SAMPLE_DATA_LOADED_KEY)) {
+      return Boolean.parseBoolean(redisStateManager.get(SAMPLE_DATA_LOADED_KEY));
+    }
+
     boolean sampleLoaded = false;
 
     try {

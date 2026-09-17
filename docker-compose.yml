@@ -1,35 +1,43 @@
-# To run the cloud version locally, first build the application using:
-#
-#  ./mvnw clean package -Pcloud
-#      -DpostgreSqlJdbcUrl="jdbc:postgresql://postgres:5432/postgres"
-#      -DpostgreSqlUsername="cargotracker" -DpostgreSqlPassword="cargotracker"
-#
-# Then start the services with:
-#
-#  docker-compose up
-#
-version: '3.8'
+version: "3.9"
 
 services:
-  postgres:
-    image: postgres:16
-    environment:
-      POSTGRES_USER: cargotracker
-      POSTGRES_PASSWORD: cargotracker
-      POSTGRES_DB: postgres
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
-
-  cargotracker:
-    build: .
+  cargo-tracker:
+    image: cargo-tracker:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: cargo-tracker
     ports:
       - "8080:8080"
-    depends_on:
-      - postgres
     environment:
-      DB_HOST: postgres
+      # Java / JVM settings
+      JAVA_TOOL_OPTIONS: "-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -Xms256m -Xmx512m"
+      TZ: "UTC"
+      LANG: "en_US.UTF-8"
+      # PostgreSQL connection (provide via .env file or environment)
+      POSTGRESQL_JDBC_URL: "${POSTGRESQL_JDBC_URL:-jdbc:postgresql://localhost:5432/cargotracker}"
+      POSTGRESQL_USERNAME: "${POSTGRESQL_USERNAME:-postgres}"
+      POSTGRESQL_PASSWORD: "${POSTGRESQL_PASSWORD:-postgres}"
+      # Redis / ElastiCache connection
+      REDIS_HOST: "${REDIS_HOST:-localhost}"
+      REDIS_PORT: "${REDIS_PORT:-6379}"
+      REDIS_PASSWORD: "${REDIS_PASSWORD:-}"
+    volumes:
+      - cargo-tracker-data:/opt/payara/cargo-tracker-data
+    networks:
+      - app-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "java -cp /opt/payara/payara-micro.jar fish.payara.micro.PayaraMicro --help > /dev/null 2>&1 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
 
 volumes:
-  postgres-data:
+  cargo-tracker-data:
+    driver: local
+
+networks:
+  app-network:
+    driver: bridge

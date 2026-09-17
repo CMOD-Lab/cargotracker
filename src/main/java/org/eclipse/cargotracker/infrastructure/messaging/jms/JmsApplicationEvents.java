@@ -11,8 +11,16 @@ import jakarta.jms.JMSContext;
 import org.eclipse.cargotracker.application.ApplicationEvents;
 import org.eclipse.cargotracker.domain.model.cargo.Cargo;
 import org.eclipse.cargotracker.domain.model.handling.HandlingEvent;
+import org.eclipse.cargotracker.infrastructure.cache.RedisStateManager;
 import org.eclipse.cargotracker.interfaces.handling.HandlingEventRegistrationAttempt;
 
+/**
+ * JMS-based implementation of {@link ApplicationEvents}.
+ *
+ * <p>Uses CDI {@code @ApplicationScoped} (stateless service bean). Any shared state is
+ * externalized to Amazon ElastiCache (Redis) via {@link RedisStateManager} to ensure
+ * consistency across all EKS pod replicas (cz-java-0064).
+ */
 @ApplicationScoped
 public class JmsApplicationEvents implements ApplicationEvents, Serializable {
 
@@ -33,6 +41,9 @@ public class JmsApplicationEvents implements ApplicationEvents, Serializable {
   private Destination handlingEventQueue;
 
   @Inject private Logger logger;
+
+  /** Redis-based state manager – externalizes singleton state to ElastiCache. */
+  @Inject private RedisStateManager redisStateManager;
 
   @Override
   public void cargoWasHandled(HandlingEvent event) {

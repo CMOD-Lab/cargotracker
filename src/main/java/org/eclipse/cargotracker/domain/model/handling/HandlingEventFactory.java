@@ -13,7 +13,15 @@ import org.eclipse.cargotracker.domain.model.location.UnLocode;
 import org.eclipse.cargotracker.domain.model.voyage.Voyage;
 import org.eclipse.cargotracker.domain.model.voyage.VoyageNumber;
 import org.eclipse.cargotracker.domain.model.voyage.VoyageRepository;
+import org.eclipse.cargotracker.infrastructure.cache.RedisStateManager;
 
+/**
+ * Factory for creating {@link HandlingEvent} instances.
+ *
+ * <p>Uses CDI {@code @ApplicationScoped} (stateless service bean). Any shared state is
+ * externalized to Amazon ElastiCache (Redis) via {@link RedisStateManager} to ensure
+ * consistency across all EKS pod replicas (cz-java-0064).
+ */
 @ApplicationScoped
 public class HandlingEventFactory implements Serializable {
 
@@ -22,6 +30,9 @@ public class HandlingEventFactory implements Serializable {
   @Inject private CargoRepository cargoRepository;
   @Inject private VoyageRepository voyageRepository;
   @Inject private LocationRepository locationRepository;
+
+  /** Redis-based state manager – externalizes singleton state to ElastiCache. */
+  @Inject private RedisStateManager redisStateManager;
 
   /**
    * @param registrationTime time when this event was received by the system

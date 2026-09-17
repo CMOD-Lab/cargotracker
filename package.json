@@ -1,0 +1,14 @@
+{
+  "name": "cargo-tracker-css-build",
+  "version": "1.0.0",
+  "description": "CSS minification build tooling for cargo-tracker (cz-css-1004)",
+  "private": true,
+  "scripts": {
+    "minify-css": "postcss src/css/*.css --config . --no-map --dir dist/css && postcss src/leaflet/leaflet.css --config . --no-map -o dist/leaflet/leaflet.css"
+  },
+  "devDependencies": {
+    "cssnano": "^6.1.2",
+    "postcss": "^8.4.38",
+    "postcss-cli": "^11.0.0"
+  }
+}

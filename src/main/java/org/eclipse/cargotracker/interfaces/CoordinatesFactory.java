@@ -15,39 +15,72 @@ import static org.eclipse.cargotracker.domain.model.location.SampleLocations.SHA
 import static org.eclipse.cargotracker.domain.model.location.SampleLocations.STOCKHOLM;
 import static org.eclipse.cargotracker.domain.model.location.SampleLocations.TOKYO;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import org.eclipse.cargotracker.domain.model.location.Location;
 import org.eclipse.cargotracker.domain.model.location.UnLocode;
+import org.eclipse.cargotracker.infrastructure.cache.RedisStateManager;
 
 /**
  * At the moment, coordinates are produced by a simple factory. It may be converted to a repository
  * if coordinates become a domain layer concern.
+ *
+ * <p>Coordinates are stored in Amazon ElastiCache (Redis) via {@link RedisStateManager} so that
+ * all EKS pod replicas share a single consistent data store instead of relying on a local
+ * in-process cache (cz-java-0070).
  */
+@ApplicationScoped
 public class CoordinatesFactory {
 
-  private static final Map<String, Coordinates> COORDINATES_MAP;
+  /** Redis key prefix used to namespace coordinates entries. */
+  private static final String CACHE_KEY_PREFIX = "coordinates:";
 
-  private CoordinatesFactory() {
-    /* Prevent instantiation. */
+  @Inject
+  private RedisStateManager redisStateManager;
+
+  /**
+   * Initialises the coordinates entries in Redis if they are not already present.
+   * This replaces the former static {@code COORDINATES_MAP} local cache.
+   */
+  @jakarta.annotation.PostConstruct
+  public void init() {
+    Map<String, Coordinates> seedMap = buildSeedMap();
+    for (Map.Entry<String, Coordinates> entry : seedMap.entrySet()) {
+      String redisKey = CACHE_KEY_PREFIX + entry.getKey();
+      // Only write if the key is absent so we don't overwrite values set by other pods.
+      String existing = redisStateManager.get(redisKey);
+      if (existing == null) {
+        Coordinates c = entry.getValue();
+        redisStateManager.set(redisKey, c.getLatitude() + "," + c.getLongitude(), 0);
+      }
+    }
   }
 
-  public static Coordinates find(Location location) {
+  public Coordinates find(Location location) {
     return find(location.getUnLocode());
   }
 
-  public static Coordinates find(UnLocode unLocode) {
+  public Coordinates find(UnLocode unLocode) {
     return find(unLocode.getIdString());
   }
 
-  public static Coordinates find(String unLocode) {
-    return COORDINATES_MAP.get(unLocode);
+  public Coordinates find(String unLocode) {
+    String value = redisStateManager.get(CACHE_KEY_PREFIX + unLocode);
+    if (value == null) {
+      return null;
+    }
+    String[] parts = value.split(",");
+    return new Coordinates(Double.parseDouble(parts[0]), Double.parseDouble(parts[1]));
   }
 
-  static {
-    Map<String, Coordinates> map = new HashMap<>();
+  // ---------------------------------------------------------------------------
+  // Private helpers
+  // ---------------------------------------------------------------------------
 
+  private static Map<String, Coordinates> buildSeedMap() {
+    Map<String, Coordinates> map = new HashMap<>();
     // TODO [Clean Code] See if there is a service to get the latitude/longitude data from.
     map.put(HONGKONG.getUnLocode().getIdString(), new Coordinates(22, 114));
     map.put(MELBOURNE.getUnLocode().getIdString(), new Coordinates(-38, 145));
@@ -63,7 +96,6 @@ public class CoordinatesFactory {
     map.put(NEWYORK.getUnLocode().getIdString(), new Coordinates(41, -74));
     map.put(DALLAS.getUnLocode().getIdString(), new Coordinates(33, -97));
     map.put(UNKNOWN.getUnLocode().getIdString(), new Coordinates(-90, 0)); // The South Pole.
-
-    COORDINATES_MAP = Collections.unmodifiableMap(map);
+    return map;
   }
 }

@@ -1,0 +1,67 @@
+# Java / Maven build artifacts
+target/
+*.class
+
+# Git
+.git/
+.gitignore
+
+# Maven wrapper (never used in Docker builds)
+mvnw
+mvnw.cmd
+.mvn/
+
+# IDE files
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+.classpath
+.project
+.settings/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Documentation
+*.md
+LICENSE.md
+CONTRIBUTING.md
+DEPENDENCIES
+
+# Test files
+src/test/
+
+# Node.js (used only in CSS/HTML minification stages - already handled)
+node_modules/
+npm-debug.log*
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+
+# Docker files (not needed in build context)
+docker-compose.yml
+docker-compose*.yml
+
+# Kubernetes manifests
+kubernetes/
+
+# Scripts
+scripts/
+
+# Docs
+docs/
+
+# CI/CD
+.github/
+
+# Cargo tracker data directory
+cargo-tracker-data/

@@ -3,7 +3,7 @@ package org.eclipse.cargotracker.application;
 import java.util.List;
 import java.util.logging.Logger;
 import jakarta.annotation.PostConstruct;
-import jakarta.ejb.Singleton;
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ejb.Startup;
 import jakarta.ejb.TransactionAttribute;
 import jakarta.ejb.TransactionAttributeType;
@@ -13,14 +13,24 @@ import jakarta.persistence.PersistenceContext;
 import org.eclipse.cargotracker.domain.model.cargo.Cargo;
 import org.eclipse.cargotracker.domain.model.location.SampleLocations;
 import org.eclipse.cargotracker.domain.model.voyage.SampleVoyages;
+import org.eclipse.cargotracker.infrastructure.cache.RedisStateManager;
 
-/** Loads sample data for demo. */
-@Singleton
+/**
+ * Loads sample data for demo (test support).
+ *
+ * <p>Replaced EJB {@code @Singleton} with CDI {@code @ApplicationScoped} to externalize
+ * singleton state to Amazon ElastiCache (Redis) via {@link RedisStateManager}, ensuring
+ * all EKS pod replicas share a single consistent data store (cz-java-0064).
+ */
+@ApplicationScoped
 @Startup
 public class BookingServiceTestDataGenerator {
 
   @Inject private Logger logger;
   @PersistenceContext private EntityManager entityManager;
+
+  /** Redis-based state manager – externalizes singleton state to ElastiCache. */
+  @Inject private RedisStateManager redisStateManager;
 
   @PostConstruct
   @TransactionAttribute(TransactionAttributeType.REQUIRED)
