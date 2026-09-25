@@ -4,6 +4,7 @@ import static java.util.stream.Collectors.toMap;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -171,7 +172,8 @@ public class EventLogger implements Serializable {
     }
 
     if ("dateTab".equals(event.getNewStep())) {
-      completionTime = LocalDateTime.now();
+      // Use UTC timestamp to eliminate server-local timezone dependencies in cloud deployments
+      completionTime = LocalDateTime.now(ZoneOffset.UTC);
     }
 
     return event.getNewStep();
@@ -205,7 +207,8 @@ public class EventLogger implements Serializable {
 
     HandlingEventRegistrationAttempt attempt =
         new HandlingEventRegistrationAttempt(
-            LocalDateTime.now(), completionTime, trackingId, voyage, eventType, location);
+            // Use UTC timestamp to eliminate server-local timezone dependencies
+            LocalDateTime.now(ZoneOffset.UTC), completionTime, trackingId, voyage, eventType, location);
 
     applicationEvents.receivedHandlingEventRegistrationAttempt(attempt);
 

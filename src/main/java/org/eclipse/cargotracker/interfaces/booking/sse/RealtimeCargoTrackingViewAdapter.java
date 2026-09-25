@@ -6,9 +6,19 @@ import org.eclipse.cargotracker.domain.model.cargo.Cargo;
 import org.eclipse.cargotracker.domain.model.cargo.RoutingStatus;
 import org.eclipse.cargotracker.domain.model.cargo.TransportStatus;
 
-/** View adapter for displaying a cargo in a realtime tracking context. */
+/**
+ * View adapter for displaying a cargo in a realtime tracking context.
+ *
+ * <p>The static label maps are immutable reference data initialized once at class load time.
+ * These are not mutable caches - they are constant lookup tables that never change.
+ * For cloud deployments, this read-only reference data does not require distributed caching.
+ * If label data becomes dynamic or user-configurable, migrate to
+ * Google Cloud Memorystore for Redis with appropriate TTL configuration.
+ */
 public class RealtimeCargoTrackingViewAdapter {
 
+  // Immutable static label maps - these are constant reference data, not mutable caches.
+  // No TTL needed as this data never changes at runtime.
   private static final Map<RoutingStatus, String> routingStatusLabels =
       new EnumMap<>(RoutingStatus.class);
   private static final Map<TransportStatus, String> transportStatusLabels =

@@ -52,12 +52,18 @@
         <type>pom</type>
         <scope>import</scope>
       </dependency>
-    </dependencies>
-  </dependencyManagement>
-  <dependencies>
+    <!-- Google Cloud Storage SDK for GCS-based file operations -->
     <dependency>
-      <groupId>jakarta.platform</groupId>
-      <artifactId>jakarta.jakartaee-api</artifactId>
+      <groupId>com.google.cloud</groupId>
+      <artifactId>google-cloud-storage</artifactId>
+      <version>2.40.1</version>
+    </dependency>
+    <!-- Google Cloud Pub/Sub SDK for cloud-native messaging -->
+    <dependency>
+      <groupId>com.google.cloud</groupId>
+      <artifactId>google-cloud-pubsub</artifactId>
+      <version>1.133.0</version>
+    </dependency>
       <version>${jakartaee.api.version}</version>
       <scope>provided</scope>
     </dependency>

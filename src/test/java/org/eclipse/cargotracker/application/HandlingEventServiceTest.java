@@ -2,6 +2,7 @@ package org.eclipse.cargotracker.application;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import org.eclipse.cargotracker.application.internal.DefaultHandlingEventService;
 import org.eclipse.cargotracker.domain.model.cargo.Cargo;
 import org.eclipse.cargotracker.domain.model.cargo.RouteSpecification;
@@ -21,7 +22,7 @@ public class HandlingEventServiceTest {
   private Cargo cargo =
       new Cargo(
           new TrackingId("ABC"),
-          new RouteSpecification(SampleLocations.HAMBURG, SampleLocations.TOKYO, LocalDate.now()));
+          new RouteSpecification(SampleLocations.HAMBURG, SampleLocations.TOKYO, LocalDate.now(ZoneOffset.UTC)));
 
   protected void setUp() throws Exception {
     //        cargoRepository = createMock(CargoRepository.class);
@@ -53,8 +54,9 @@ public class HandlingEventServiceTest {
     //        replay(cargoRepository, voyageRepository, handlingEventRepository,
     //                locationRepository, applicationEvents);
 
+    // Use UTC timestamp to eliminate server-local timezone dependencies
     service.registerHandlingEvent(
-        LocalDateTime.now(),
+        LocalDateTime.now(ZoneOffset.UTC),
         cargo.getTrackingId(),
         SampleVoyages.CM001.getVoyageNumber(),
         SampleLocations.STOCKHOLM.getUnLocode(),

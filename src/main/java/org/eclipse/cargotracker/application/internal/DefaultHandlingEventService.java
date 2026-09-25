@@ -1,6 +1,7 @@
 package org.eclipse.cargotracker.application.internal;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.logging.Logger;
 import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
@@ -14,6 +15,10 @@ import org.eclipse.cargotracker.domain.model.handling.HandlingEventRepository;
 import org.eclipse.cargotracker.domain.model.location.UnLocode;
 import org.eclipse.cargotracker.domain.model.voyage.VoyageNumber;
 
+/**
+ * Default implementation of HandlingEventService.
+ * Uses UTC timestamps to ensure consistent behavior across distributed cloud instances.
+ */
 @Stateless
 public class DefaultHandlingEventService implements HandlingEventService {
 
@@ -30,7 +35,8 @@ public class DefaultHandlingEventService implements HandlingEventService {
       UnLocode unLocode,
       HandlingEvent.Type type)
       throws CannotCreateHandlingEventException {
-    LocalDateTime registrationTime = LocalDateTime.now();
+    // Use UTC timestamp to eliminate server-local time dependencies in cloud deployments
+    LocalDateTime registrationTime = LocalDateTime.now(ZoneOffset.UTC);
 
     /*
      * Using a factory to create a HandlingEvent (aggregate). This is where it is

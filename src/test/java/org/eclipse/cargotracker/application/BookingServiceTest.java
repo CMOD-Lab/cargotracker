@@ -1,9 +1,4 @@
-package org.eclipse.cargotracker.application;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
+import java.time.ZoneOffset;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Random;
@@ -74,13 +69,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
  * largely do not warrant their own tests.
  */
 @ExtendWith(ArquillianExtension.class)
-@TestMethodOrder(OrderAnnotation.class)
-public class BookingServiceTest {
-  private static TrackingId trackingId;
-  private static List<Itinerary> candidates;
+  // Use instance-level state instead of static mutable state for cloud compatibility
   private static LocalDate deadline;
-  private static Itinerary assigned;
-
   @Inject private BookingService bookingService;
   @PersistenceContext private EntityManager entityManager;
 
@@ -145,13 +135,8 @@ public class BookingServiceTest {
         .addClass(TransitPath.class)
         .addClass(TransitEdge.class)
         // Third-party system simulator
-        .addClass(GraphTraversalService.class)
-        .addClass(GraphDao.class)
-        // Sample data.
-        .addClass(BookingServiceTestDataGenerator.class)
-        .addClass(SampleLocations.class)
-        .addClass(SampleVoyages.class)
-        // Persistence unit descriptor
+    // Use UTC date to eliminate server-local timezone dependencies
+    deadline = LocalDate.now(ZoneOffset.UTC).plusMonths(6);
         .addAsResource("test-persistence.xml", "META-INF/persistence.xml")
         // Web application descriptor
         .addAsWebInfResource(webXml, "web.xml")

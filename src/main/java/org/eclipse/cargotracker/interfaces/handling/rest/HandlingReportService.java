@@ -1,6 +1,7 @@
 package org.eclipse.cargotracker.interfaces.handling.rest;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
@@ -20,6 +21,7 @@ import org.eclipse.cargotracker.interfaces.handling.HandlingEventRegistrationAtt
  * This REST end-point implementation performs basic validation and parsing of incoming data, and in
  * case of a valid registration attempt, sends an asynchronous message with the information to the
  * handling event registration system for proper registration.
+ * Uses UTC timestamps to ensure consistent behavior across distributed cloud instances.
  */
 @Stateless
 @Path("/handling")
@@ -46,7 +48,8 @@ public class HandlingReportService {
 
     HandlingEventRegistrationAttempt attempt =
         new HandlingEventRegistrationAttempt(
-            LocalDateTime.now(), completionTime, trackingId, voyageNumber, type, unLocode);
+            // Use UTC timestamp to eliminate server-local timezone dependencies
+            LocalDateTime.now(ZoneOffset.UTC), completionTime, trackingId, voyageNumber, type, unLocode);
 
     applicationEvents.receivedHandlingEventRegistrationAttempt(attempt);
   }

@@ -24,9 +24,16 @@ import org.eclipse.cargotracker.domain.model.location.UnLocode;
 /**
  * At the moment, coordinates are produced by a simple factory. It may be converted to a repository
  * if coordinates become a domain layer concern.
+ *
+ * <p>The coordinates map is a static immutable lookup table (not a mutable cache).
+ * For cloud deployments, this read-only reference data does not require distributed caching
+ * since it never changes at runtime. If coordinates become dynamic, migrate to
+ * Google Cloud Memorystore for Redis with appropriate TTL configuration.
  */
 public class CoordinatesFactory {
 
+  // Immutable static lookup map - this is reference data, not a mutable cache.
+  // No TTL needed as this data never changes at runtime.
   private static final Map<String, Coordinates> COORDINATES_MAP;
 
   private CoordinatesFactory() {

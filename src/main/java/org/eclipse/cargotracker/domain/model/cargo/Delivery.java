@@ -9,12 +9,7 @@ import static org.eclipse.cargotracker.domain.model.cargo.TransportStatus.NOT_RE
 import static org.eclipse.cargotracker.domain.model.cargo.TransportStatus.ONBOARD_CARRIER;
 import static org.eclipse.cargotracker.domain.model.cargo.TransportStatus.UNKNOWN;
 
-import java.io.Serializable;
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
-import java.util.Iterator;
-import jakarta.persistence.Column;
-import jakarta.persistence.Embeddable;
+import java.time.ZoneOffset;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -81,13 +76,9 @@ public class Delivery implements Serializable {
 
   public Delivery() {
     // Nothing to initialize
-  }
-
-  public Delivery(
-      HandlingEvent lastEvent, Itinerary itinerary, RouteSpecification routeSpecification) {
-    // This is a workaround to a Hibernate issue. when the `LocalDateTime` field is persisted into
     // the DB, and retrieved from the DB, the values are different by nanoseconds.
-    this.calculatedAt = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
+    // Use UTC to eliminate server-local timezone dependencies in cloud deployments.
+    this.calculatedAt = LocalDateTime.now(ZoneOffset.UTC).truncatedTo(ChronoUnit.SECONDS);
     this.lastEvent = lastEvent;
 
     this.misdirected = calculateMisdirectionStatus(itinerary);

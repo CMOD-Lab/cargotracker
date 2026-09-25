@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -23,15 +24,15 @@ public class CargoTest {
   private final List<HandlingEvent> events = new ArrayList<>();
   private final Voyage voyage =
       new Voyage.Builder(new VoyageNumber("0123"), SampleLocations.STOCKHOLM)
-          .addMovement(SampleLocations.HAMBURG, LocalDateTime.now(), LocalDateTime.now())
-          .addMovement(SampleLocations.HONGKONG, LocalDateTime.now(), LocalDateTime.now())
-          .addMovement(SampleLocations.MELBOURNE, LocalDateTime.now(), LocalDateTime.now())
+          .addMovement(SampleLocations.HAMBURG, LocalDateTime.now(ZoneOffset.UTC), LocalDateTime.now(ZoneOffset.UTC))
+          .addMovement(SampleLocations.HONGKONG, LocalDateTime.now(ZoneOffset.UTC), LocalDateTime.now(ZoneOffset.UTC))
+          .addMovement(SampleLocations.MELBOURNE, LocalDateTime.now(ZoneOffset.UTC), LocalDateTime.now(ZoneOffset.UTC))
           .build();
 
   @Test
   public void testConstruction() {
     TrackingId trackingId = new TrackingId("XYZ");
-    LocalDate arrivalDeadline = LocalDate.now().minusYears(1).plusMonths(3).plusDays(3);
+    LocalDate arrivalDeadline = LocalDate.now(ZoneOffset.UTC).minusYears(1).plusMonths(3).plusDays(3);
     RouteSpecification routeSpecification =
         new RouteSpecification(
             SampleLocations.STOCKHOLM, SampleLocations.MELBOURNE, arrivalDeadline);
@@ -50,13 +51,13 @@ public class CargoTest {
         new Cargo(
             new TrackingId("XYZ"),
             new RouteSpecification(
-                SampleLocations.STOCKHOLM, SampleLocations.MELBOURNE, LocalDate.now()));
+                SampleLocations.STOCKHOLM, SampleLocations.MELBOURNE, LocalDate.now(ZoneOffset.UTC)));
     final Itinerary good = new Itinerary();
     Itinerary bad = new Itinerary();
     @SuppressWarnings("serial")
     RouteSpecification acceptOnlyGood =
         new RouteSpecification(
-            cargo.getOrigin(), cargo.getRouteSpecification().getDestination(), LocalDate.now()) {
+            cargo.getOrigin(), cargo.getRouteSpecification().getDestination(), LocalDate.now(ZoneOffset.UTC)) {
 
           @Override
           public boolean isSatisfiedBy(Itinerary itinerary) {
@@ -81,7 +82,7 @@ public class CargoTest {
         new Cargo(
             new TrackingId("XYZ"),
             new RouteSpecification(
-                SampleLocations.STOCKHOLM, SampleLocations.MELBOURNE, LocalDate.now()));
+                SampleLocations.STOCKHOLM, SampleLocations.MELBOURNE, LocalDate.now(ZoneOffset.UTC)));
 
     assertEquals(Location.UNKNOWN, cargo.getDelivery().getLastKnownLocation());
   }
@@ -125,8 +126,8 @@ public class CargoTest {
     events.add(
         new HandlingEvent(
             cargo,
-            LocalDateTime.now().minusDays(40),
-            LocalDateTime.now(),
+            LocalDateTime.now(ZoneOffset.UTC).minusDays(40),
+            LocalDateTime.now(ZoneOffset.UTC),
             HandlingEvent.Type.RECEIVE,
             SampleLocations.HANGZOU));
     cargo.deriveDeliveryProgress(new HandlingHistory(events));
@@ -134,15 +135,15 @@ public class CargoTest {
 
     Voyage voyage =
         new Voyage.Builder(new VoyageNumber("0123"), SampleLocations.HANGZOU)
-            .addMovement(SampleLocations.NEWYORK, LocalDateTime.now(), LocalDateTime.now())
+            .addMovement(SampleLocations.NEWYORK, LocalDateTime.now(ZoneOffset.UTC), LocalDateTime.now(ZoneOffset.UTC))
             .build();
 
     // Adding an unload event, but not at the final destination
     events.add(
         new HandlingEvent(
             cargo,
-            LocalDateTime.now().minusDays(30),
-            LocalDateTime.now(),
+            LocalDateTime.now(ZoneOffset.UTC).minusDays(30),
+            LocalDateTime.now(ZoneOffset.UTC),
             HandlingEvent.Type.UNLOAD,
             SampleLocations.TOKYO,
             voyage));
@@ -153,8 +154,8 @@ public class CargoTest {
     events.add(
         new HandlingEvent(
             cargo,
-            LocalDateTime.now().minusDays(20),
-            LocalDateTime.now(),
+            LocalDateTime.now(ZoneOffset.UTC).minusDays(20),
+            LocalDateTime.now(ZoneOffset.UTC),
             HandlingEvent.Type.CUSTOMS,
             SampleLocations.NEWYORK));
     cargo.deriveDeliveryProgress(new HandlingHistory(events));
@@ -164,8 +165,8 @@ public class CargoTest {
     events.add(
         new HandlingEvent(
             cargo,
-            LocalDateTime.now().minusDays(10),
-            LocalDateTime.now(),
+            LocalDateTime.now(ZoneOffset.UTC).minusDays(10),
+            LocalDateTime.now(ZoneOffset.UTC),
             HandlingEvent.Type.UNLOAD,
             SampleLocations.NEWYORK,
             voyage));
@@ -179,13 +180,13 @@ public class CargoTest {
         new Cargo(
             new TrackingId("XYZ"),
             new RouteSpecification(
-                SampleLocations.STOCKHOLM, SampleLocations.MELBOURNE, LocalDate.now()));
+                SampleLocations.STOCKHOLM, SampleLocations.MELBOURNE, LocalDate.now(ZoneOffset.UTC)));
 
     HandlingEvent event =
         new HandlingEvent(
             cargo,
-            LocalDateTime.now().minusYears(1).plusMonths(12).plusDays(1),
-            LocalDateTime.now().minusYears(1).plusMonths(12).plusDays(1),
+            LocalDateTime.now(ZoneOffset.UTC).minusYears(1).plusMonths(12).plusDays(1),
+            LocalDateTime.now(ZoneOffset.UTC).minusYears(1).plusMonths(12).plusDays(1),
             HandlingEvent.Type.RECEIVE,
             SampleLocations.STOCKHOLM);
     events.add(event);
@@ -200,8 +201,8 @@ public class CargoTest {
     events.add(
         new HandlingEvent(
             cargo,
-            LocalDateTime.now().minusYears(1).plusMonths(12).plusDays(9),
-            LocalDateTime.now().minusYears(1).plusMonths(12).plusDays(9),
+            LocalDateTime.now(ZoneOffset.UTC).minusYears(1).plusMonths(12).plusDays(9),
+            LocalDateTime.now(ZoneOffset.UTC).minusYears(1).plusMonths(12).plusDays(9),
             HandlingEvent.Type.CLAIM,
             SampleLocations.MELBOURNE));
     cargo.deriveDeliveryProgress(new HandlingHistory(events));
@@ -214,21 +215,21 @@ public class CargoTest {
         new Cargo(
             new TrackingId("XYZ"),
             new RouteSpecification(
-                SampleLocations.STOCKHOLM, SampleLocations.MELBOURNE, LocalDate.now()));
+                SampleLocations.STOCKHOLM, SampleLocations.MELBOURNE, LocalDate.now(ZoneOffset.UTC)));
 
     events.add(
         new HandlingEvent(
             cargo,
-            LocalDateTime.now().minusYears(1).plusMonths(12).plusDays(1),
-            LocalDateTime.now().minusYears(1).plusMonths(12).plusDays(1),
+            LocalDateTime.now(ZoneOffset.UTC).minusYears(1).plusMonths(12).plusDays(1),
+            LocalDateTime.now(ZoneOffset.UTC).minusYears(1).plusMonths(12).plusDays(1),
             HandlingEvent.Type.LOAD,
             SampleLocations.STOCKHOLM,
             voyage));
     events.add(
         new HandlingEvent(
             cargo,
-            LocalDateTime.now().minusYears(1).plusMonths(12).plusDays(2),
-            LocalDateTime.now().minusYears(1).plusMonths(12).plusDays(2),
+            LocalDateTime.now(ZoneOffset.UTC).minusYears(1).plusMonths(12).plusDays(2),
+            LocalDateTime.now(ZoneOffset.UTC).minusYears(1).plusMonths(12).plusDays(2),
             HandlingEvent.Type.UNLOAD,
             SampleLocations.HAMBURG,
             voyage));
@@ -236,16 +237,16 @@ public class CargoTest {
     events.add(
         new HandlingEvent(
             cargo,
-            LocalDateTime.now().minusYears(1).plusMonths(12).plusDays(3),
-            LocalDateTime.now().minusYears(1).plusMonths(12).plusDays(3),
+            LocalDateTime.now(ZoneOffset.UTC).minusYears(1).plusMonths(12).plusDays(3),
+            LocalDateTime.now(ZoneOffset.UTC).minusYears(1).plusMonths(12).plusDays(3),
             HandlingEvent.Type.LOAD,
             SampleLocations.HAMBURG,
             voyage));
     events.add(
         new HandlingEvent(
             cargo,
-            LocalDateTime.now().minusYears(1).plusMonths(12).plusDays(4),
-            LocalDateTime.now().minusYears(1).plusMonths(12).plusDays(4),
+            LocalDateTime.now(ZoneOffset.UTC).minusYears(1).plusMonths(12).plusDays(4),
+            LocalDateTime.now(ZoneOffset.UTC).minusYears(1).plusMonths(12).plusDays(4),
             HandlingEvent.Type.UNLOAD,
             SampleLocations.HONGKONG,
             voyage));
@@ -260,29 +261,29 @@ public class CargoTest {
         new Cargo(
             new TrackingId("XYZ"),
             new RouteSpecification(
-                SampleLocations.STOCKHOLM, SampleLocations.MELBOURNE, LocalDate.now()));
+                SampleLocations.STOCKHOLM, SampleLocations.MELBOURNE, LocalDate.now(ZoneOffset.UTC)));
 
     events.add(
         new HandlingEvent(
             cargo,
-            LocalDateTime.now().minusYears(1).plusMonths(12).plusDays(1),
-            LocalDateTime.now().minusYears(1).plusMonths(12).plusDays(1),
+            LocalDateTime.now(ZoneOffset.UTC).minusYears(1).plusMonths(12).plusDays(1),
+            LocalDateTime.now(ZoneOffset.UTC).minusYears(1).plusMonths(12).plusDays(1),
             HandlingEvent.Type.LOAD,
             SampleLocations.STOCKHOLM,
             voyage));
     events.add(
         new HandlingEvent(
             cargo,
-            LocalDateTime.now().minusYears(1).plusMonths(12).plusDays(2),
-            LocalDateTime.now().minusYears(1).plusMonths(12).plusDays(2),
+            LocalDateTime.now(ZoneOffset.UTC).minusYears(1).plusMonths(12).plusDays(2),
+            LocalDateTime.now(ZoneOffset.UTC).minusYears(1).plusMonths(12).plusDays(2),
             HandlingEvent.Type.UNLOAD,
             SampleLocations.HAMBURG,
             voyage));
     events.add(
         new HandlingEvent(
             cargo,
-            LocalDateTime.now().minusYears(1).plusMonths(12).plusDays(3),
-            LocalDateTime.now().minusYears(1).plusMonths(12).plusDays(3),
+            LocalDateTime.now(ZoneOffset.UTC).minusYears(1).plusMonths(12).plusDays(3),
+            LocalDateTime.now(ZoneOffset.UTC).minusYears(1).plusMonths(12).plusDays(3),
             HandlingEvent.Type.LOAD,
             SampleLocations.HAMBURG,
             voyage));
@@ -297,21 +298,21 @@ public class CargoTest {
         new Cargo(
             new TrackingId("XYZ"),
             new RouteSpecification(
-                SampleLocations.STOCKHOLM, SampleLocations.MELBOURNE, LocalDate.now()));
+                SampleLocations.STOCKHOLM, SampleLocations.MELBOURNE, LocalDate.now(ZoneOffset.UTC)));
 
     events.add(
         new HandlingEvent(
             cargo,
-            LocalDateTime.now().minusYears(1).plusMonths(12).plusDays(1),
-            LocalDateTime.now().minusYears(1).plusMonths(12).plusDays(1),
+            LocalDateTime.now(ZoneOffset.UTC).minusYears(1).plusMonths(12).plusDays(1),
+            LocalDateTime.now(ZoneOffset.UTC).minusYears(1).plusMonths(12).plusDays(1),
             HandlingEvent.Type.LOAD,
             SampleLocations.STOCKHOLM,
             voyage));
     events.add(
         new HandlingEvent(
             cargo,
-            LocalDateTime.now().minusYears(1).plusMonths(12).plusDays(2),
-            LocalDateTime.now().minusYears(1).plusMonths(12).plusDays(2),
+            LocalDateTime.now(ZoneOffset.UTC).minusYears(1).plusMonths(12).plusDays(2),
+            LocalDateTime.now(ZoneOffset.UTC).minusYears(1).plusMonths(12).plusDays(2),
             HandlingEvent.Type.UNLOAD,
             SampleLocations.HAMBURG,
             voyage));
@@ -319,16 +320,16 @@ public class CargoTest {
     events.add(
         new HandlingEvent(
             cargo,
-            LocalDateTime.now().minusYears(1).plusMonths(12).plusDays(3),
-            LocalDateTime.now().minusYears(1).plusMonths(12).plusDays(3),
+            LocalDateTime.now(ZoneOffset.UTC).minusYears(1).plusMonths(12).plusDays(3),
+            LocalDateTime.now(ZoneOffset.UTC).minusYears(1).plusMonths(12).plusDays(3),
             HandlingEvent.Type.LOAD,
             SampleLocations.HAMBURG,
             voyage));
     events.add(
         new HandlingEvent(
             cargo,
-            LocalDateTime.now().minusYears(1).plusMonths(12).plusDays(4),
-            LocalDateTime.now().minusYears(1).plusMonths(12).plusDays(4),
+            LocalDateTime.now(ZoneOffset.UTC).minusYears(1).plusMonths(12).plusDays(4),
+            LocalDateTime.now(ZoneOffset.UTC).minusYears(1).plusMonths(12).plusDays(4),
             HandlingEvent.Type.UNLOAD,
             SampleLocations.HONGKONG,
             voyage));
@@ -336,16 +337,16 @@ public class CargoTest {
     events.add(
         new HandlingEvent(
             cargo,
-            LocalDateTime.now().minusYears(1).plusMonths(12).plusDays(5),
-            LocalDateTime.now().minusYears(1).plusMonths(12).plusDays(5),
+            LocalDateTime.now(ZoneOffset.UTC).minusYears(1).plusMonths(12).plusDays(5),
+            LocalDateTime.now(ZoneOffset.UTC).minusYears(1).plusMonths(12).plusDays(5),
             HandlingEvent.Type.LOAD,
             SampleLocations.HONGKONG,
             voyage));
     events.add(
         new HandlingEvent(
             cargo,
-            LocalDateTime.now().minusYears(1).plusMonths(12).plusDays(7),
-            LocalDateTime.now().minusYears(1).plusMonths(12).plusDays(7),
+            LocalDateTime.now(ZoneOffset.UTC).minusYears(1).plusMonths(12).plusDays(7),
+            LocalDateTime.now(ZoneOffset.UTC).minusYears(1).plusMonths(12).plusDays(7),
             HandlingEvent.Type.UNLOAD,
             SampleLocations.MELBOURNE,
             voyage));
@@ -362,7 +363,7 @@ public class CargoTest {
         new Cargo(
             new TrackingId("TRKID"),
             new RouteSpecification(
-                SampleLocations.SHANGHAI, SampleLocations.GOTHENBURG, LocalDate.now()));
+                SampleLocations.SHANGHAI, SampleLocations.GOTHENBURG, LocalDate.now(ZoneOffset.UTC)));
     assertFalse(cargo.getDelivery().isMisdirected());
 
     cargo =
@@ -378,54 +379,54 @@ public class CargoTest {
     handlingEvents.add(
         new HandlingEvent(
             cargo,
-            LocalDateTime.now().minusDays(10),
-            LocalDateTime.now().minusDays(20),
+            LocalDateTime.now(ZoneOffset.UTC).minusDays(10),
+            LocalDateTime.now(ZoneOffset.UTC).minusDays(20),
             HandlingEvent.Type.RECEIVE,
             SampleLocations.SHANGHAI));
     handlingEvents.add(
         new HandlingEvent(
             cargo,
-            LocalDateTime.now().minusDays(30),
-            LocalDateTime.now().minusDays(40),
+            LocalDateTime.now(ZoneOffset.UTC).minusDays(30),
+            LocalDateTime.now(ZoneOffset.UTC).minusDays(40),
             HandlingEvent.Type.LOAD,
             SampleLocations.SHANGHAI,
             voyage));
     handlingEvents.add(
         new HandlingEvent(
             cargo,
-            LocalDateTime.now().minusDays(50),
-            LocalDateTime.now().minusDays(60),
+            LocalDateTime.now(ZoneOffset.UTC).minusDays(50),
+            LocalDateTime.now(ZoneOffset.UTC).minusDays(60),
             HandlingEvent.Type.UNLOAD,
             SampleLocations.ROTTERDAM,
             voyage));
     handlingEvents.add(
         new HandlingEvent(
             cargo,
-            LocalDateTime.now().minusDays(70),
-            LocalDateTime.now().minusDays(80),
+            LocalDateTime.now(ZoneOffset.UTC).minusDays(70),
+            LocalDateTime.now(ZoneOffset.UTC).minusDays(80),
             HandlingEvent.Type.LOAD,
             SampleLocations.ROTTERDAM,
             voyage));
     handlingEvents.add(
         new HandlingEvent(
             cargo,
-            LocalDateTime.now().minusDays(90),
-            LocalDateTime.now().minusDays(100),
+            LocalDateTime.now(ZoneOffset.UTC).minusDays(90),
+            LocalDateTime.now(ZoneOffset.UTC).minusDays(100),
             HandlingEvent.Type.UNLOAD,
             SampleLocations.GOTHENBURG,
             voyage));
     handlingEvents.add(
         new HandlingEvent(
             cargo,
-            LocalDateTime.now().minusDays(110),
-            LocalDateTime.now().minusDays(120),
+            LocalDateTime.now(ZoneOffset.UTC).minusDays(110),
+            LocalDateTime.now(ZoneOffset.UTC).minusDays(120),
             HandlingEvent.Type.CLAIM,
             SampleLocations.GOTHENBURG));
     handlingEvents.add(
         new HandlingEvent(
             cargo,
-            LocalDateTime.now().minusDays(130),
-            LocalDateTime.now().minusDays(140),
+            LocalDateTime.now(ZoneOffset.UTC).minusDays(130),
+            LocalDateTime.now(ZoneOffset.UTC).minusDays(140),
             HandlingEvent.Type.CUSTOMS,
             SampleLocations.GOTHENBURG));
 
@@ -442,8 +443,8 @@ public class CargoTest {
     handlingEvents.add(
         new HandlingEvent(
             cargo,
-            LocalDateTime.now(),
-            LocalDateTime.now(),
+            LocalDateTime.now(ZoneOffset.UTC),
+            LocalDateTime.now(ZoneOffset.UTC),
             HandlingEvent.Type.RECEIVE,
             SampleLocations.HANGZOU));
     events.addAll(handlingEvents);
@@ -459,31 +460,31 @@ public class CargoTest {
     handlingEvents.add(
         new HandlingEvent(
             cargo,
-            LocalDateTime.now().minusDays(10),
-            LocalDateTime.now().minusDays(20),
+            LocalDateTime.now(ZoneOffset.UTC).minusDays(10),
+            LocalDateTime.now(ZoneOffset.UTC).minusDays(20),
             HandlingEvent.Type.RECEIVE,
             SampleLocations.SHANGHAI));
     handlingEvents.add(
         new HandlingEvent(
             cargo,
-            LocalDateTime.now().minusDays(30),
-            LocalDateTime.now().minusDays(40),
+            LocalDateTime.now(ZoneOffset.UTC).minusDays(30),
+            LocalDateTime.now(ZoneOffset.UTC).minusDays(40),
             HandlingEvent.Type.LOAD,
             SampleLocations.SHANGHAI,
             voyage));
     handlingEvents.add(
         new HandlingEvent(
             cargo,
-            LocalDateTime.now().minusDays(50),
-            LocalDateTime.now().minusDays(60),
+            LocalDateTime.now(ZoneOffset.UTC).minusDays(50),
+            LocalDateTime.now(ZoneOffset.UTC).minusDays(60),
             HandlingEvent.Type.UNLOAD,
             SampleLocations.ROTTERDAM,
             voyage));
     handlingEvents.add(
         new HandlingEvent(
             cargo,
-            LocalDateTime.now().minusDays(70),
-            LocalDateTime.now().minusDays(80),
+            LocalDateTime.now(ZoneOffset.UTC).minusDays(70),
+            LocalDateTime.now(ZoneOffset.UTC).minusDays(80),
             HandlingEvent.Type.LOAD,
             SampleLocations.ROTTERDAM,
             voyage));
@@ -501,31 +502,31 @@ public class CargoTest {
     handlingEvents.add(
         new HandlingEvent(
             cargo,
-            LocalDateTime.now().minusDays(10),
-            LocalDateTime.now().minusDays(20),
+            LocalDateTime.now(ZoneOffset.UTC).minusDays(10),
+            LocalDateTime.now(ZoneOffset.UTC).minusDays(20),
             HandlingEvent.Type.RECEIVE,
             SampleLocations.SHANGHAI));
     handlingEvents.add(
         new HandlingEvent(
             cargo,
-            LocalDateTime.now().minusDays(30),
-            LocalDateTime.now().minusDays(40),
+            LocalDateTime.now(ZoneOffset.UTC).minusDays(30),
+            LocalDateTime.now(ZoneOffset.UTC).minusDays(40),
             HandlingEvent.Type.LOAD,
             SampleLocations.SHANGHAI,
             voyage));
     handlingEvents.add(
         new HandlingEvent(
             cargo,
-            LocalDateTime.now().minusDays(50),
-            LocalDateTime.now().minusDays(60),
+            LocalDateTime.now(ZoneOffset.UTC).minusDays(50),
+            LocalDateTime.now(ZoneOffset.UTC).minusDays(60),
             HandlingEvent.Type.UNLOAD,
             SampleLocations.ROTTERDAM,
             voyage));
     handlingEvents.add(
         new HandlingEvent(
             cargo,
-            LocalDateTime.now(),
-            LocalDateTime.now(),
+            LocalDateTime.now(ZoneOffset.UTC),
+            LocalDateTime.now(ZoneOffset.UTC),
             HandlingEvent.Type.CLAIM,
             SampleLocations.ROTTERDAM));
 
@@ -538,13 +539,13 @@ public class CargoTest {
   private Cargo setUpCargoWithItinerary(Location origin, Location midpoint, Location destination) {
     Cargo cargo =
         new Cargo(
-            new TrackingId("CARGO1"), new RouteSpecification(origin, destination, LocalDate.now()));
+            new TrackingId("CARGO1"), new RouteSpecification(origin, destination, LocalDate.now(ZoneOffset.UTC)));
 
     Itinerary itinerary =
         new Itinerary(
             Arrays.asList(
-                new Leg(voyage, origin, midpoint, LocalDateTime.now(), LocalDateTime.now()),
-                new Leg(voyage, midpoint, destination, LocalDateTime.now(), LocalDateTime.now())));
+                new Leg(voyage, origin, midpoint, LocalDateTime.now(ZoneOffset.UTC), LocalDateTime.now(ZoneOffset.UTC)),
+                new Leg(voyage, midpoint, destination, LocalDateTime.now(ZoneOffset.UTC), LocalDateTime.now(ZoneOffset.UTC))));
 
     cargo.assignToRoute(itinerary);
     return cargo;

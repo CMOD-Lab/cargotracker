@@ -1,6 +1,7 @@
 package org.eclipse.pathfinder.api;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -17,6 +18,10 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
 import org.eclipse.pathfinder.internal.GraphDao;
 
+/**
+ * Graph traversal service for finding shortest paths.
+ * Uses UTC timestamps to ensure consistent behavior across distributed cloud instances.
+ */
 @Stateless
 @Path("/graph-traversal")
 public class GraphTraversalService {
@@ -62,7 +67,8 @@ public class GraphTraversalService {
       allVertices = getRandomChunkOfLocations(allVertices);
       List<TransitEdge> transitEdges = new ArrayList<>(allVertices.size() - 1);
       String fromUnLocode = originUnLocode;
-      LocalDateTime date = LocalDateTime.now();
+      // Use UTC timestamp to eliminate server-local timezone dependencies in cloud deployments
+      LocalDateTime date = LocalDateTime.now(ZoneOffset.UTC);
 
       for (int j = 0; j <= allVertices.size(); ++j) {
         LocalDateTime fromDate = nextDate(date);
