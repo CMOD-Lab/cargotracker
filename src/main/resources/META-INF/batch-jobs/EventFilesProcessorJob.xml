@@ -3,9 +3,14 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/jobXML_2_0.xsd" version="2.0">
   <properties>
-    <property name="upload_directory" value="/tmp/uploads" />
-    <property name="archive_directory" value="/tmp/archive" />
-    <property name="failed_directory" value="/tmp/failed" />
+    <!-- AWS S3 bucket name; override via environment variable S3_BUCKET or job parameter -->
+    <property name="s3_bucket" value="#{systemProperties['S3_BUCKET'] ?: systemEnvironment['S3_BUCKET'] ?: 'cargo-tracker-bucket'}" />
+    <!-- S3 key prefix for incoming upload objects -->
+    <property name="upload_prefix" value="#{systemProperties['S3_UPLOAD_PREFIX'] ?: systemEnvironment['S3_UPLOAD_PREFIX'] ?: 'uploads'}" />
+    <!-- S3 key prefix for archived (successfully processed) objects -->
+    <property name="archive_prefix" value="#{systemProperties['S3_ARCHIVE_PREFIX'] ?: systemEnvironment['S3_ARCHIVE_PREFIX'] ?: 'archive'}" />
+    <!-- S3 key prefix for failed (parse-error) objects -->
+    <property name="failed_prefix" value="#{systemProperties['S3_FAILED_PREFIX'] ?: systemEnvironment['S3_FAILED_PREFIX'] ?: 'failed'}" />
   </properties>
   <listeners>
     <listener ref="FileProcessorJobListener" />

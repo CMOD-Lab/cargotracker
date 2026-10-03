@@ -1,7 +1,7 @@
 package org.eclipse.cargotracker.interfaces.handling.file;
 
-import java.io.File;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -9,12 +9,12 @@ public class EventFilesCheckpoint implements Serializable {
 
   private static final long serialVersionUID = 1L;
 
-  private List<File> files = new LinkedList<>();
-  private int fileIndex = 0;
+  private List<String> objectKeys = new LinkedList<>();
+  private int keyIndex = 0;
   private long filePointer = 0;
 
-  public void setFiles(List<File> files) {
-    this.files = files;
+  public void setObjectKeys(List<String> objectKeys) {
+    this.objectKeys = new ArrayList<>(objectKeys);
   }
 
   public long getFilePointer() {
@@ -25,19 +25,23 @@ public class EventFilesCheckpoint implements Serializable {
     this.filePointer = filePointer;
   }
 
-  public File currentFile() {
-    if (files.size() > fileIndex) {
-      return files.get(fileIndex);
+  public void incrementFilePointer() {
+    this.filePointer++;
+  }
+
+  public String currentObjectKey() {
+    if (objectKeys.size() > keyIndex) {
+      return objectKeys.get(keyIndex);
     } else {
       return null;
     }
   }
 
-  public File nextFile() {
+  public String nextObjectKey() {
     filePointer = 0;
 
-    if (files.size() > ++fileIndex) {
-      return files.get(fileIndex);
+    if (objectKeys.size() > ++keyIndex) {
+      return objectKeys.get(keyIndex);
     } else {
       return null;
     }

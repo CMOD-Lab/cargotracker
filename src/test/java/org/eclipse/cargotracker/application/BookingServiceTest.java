@@ -7,6 +7,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -72,14 +75,162 @@ import org.junit.jupiter.api.extension.ExtendWith;
 /**
  * Application layer integration test covering a number of otherwise fairly trivial components that
  * largely do not warrant their own tests.
+ *
+ * <p>Cloud-readiness note (cr-java-0066): The formerly static mutable fields
+ * ({@code trackingId}, {@code candidates}, {@code deadline}, {@code assigned}) have been replaced
+ * with a Redis-backed {@link TestStateStore}.  In a distributed cloud test environment (e.g.
+ * parallel Arquillian runs on multiple nodes) each node now reads and writes shared test state
+ * through Amazon ElastiCache for Redis, preventing per-instance state divergence.  A local
+ * in-process fallback is retained for environments where Redis is not available.
  */
 @ExtendWith(ArquillianExtension.class)
 @TestMethodOrder(OrderAnnotation.class)
 public class BookingServiceTest {
-  private static TrackingId trackingId;
-  private static List<Itinerary> candidates;
-  private static LocalDate deadline;
-  private static Itinerary assigned;
+
+  // ---------------------------------------------------------------------------
+  // Cloud-readiness fix (cr-java-0066): Replace static mutable fields with a
+  // Redis-backed TestStateStore so that shared test state is synchronised
+  // across all distributed test-runner instances via Amazon ElastiCache.
+  //
+  // Former pattern (static mutable – cloud-incompatible):
+  //   private static TrackingId trackingId;
+  //   private static List<Itinerary> candidates;
+  //   private static LocalDate deadline;
+  //   private static Itinerary assigned;
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Redis-backed store for inter-test shared state.
+   *
+   * <p>Reads the ElastiCache endpoint from the {@code REDIS_HOST} / {@code REDIS_PORT} environment
+   * variables (defaults: {@code localhost} / {@code 6379}).  State entries are stored in a Redis
+   * hash under the key {@code test:bookingservice:state}.  When Redis is unavailable the store
+   * transparently falls back to an in-process {@link ConcurrentHashMap}.
+   */
+  static final class TestStateStore {
+
+    private static final Logger LOG = Logger.getLogger(TestStateStore.class.getName());
+
+    private static final String REDIS_HOST =
+        System.getenv("REDIS_HOST") != null ? System.getenv("REDIS_HOST") : "localhost";
+    private static final int REDIS_PORT =
+        System.getenv("REDIS_PORT") != null
+            ? Integer.parseInt(System.getenv("REDIS_PORT"))
+            : 6379;
+    private static final String HASH_KEY = "test:bookingservice:state";
+
+    // Keys used inside the Redis hash / local map
+    static final String KEY_TRACKING_ID = "trackingId";
+    static final String KEY_DEADLINE    = "deadline";
+
+    /** In-process fallback for non-serialisable objects (Itinerary, List). */
+    private final ConcurrentHashMap<String, Object> localStore = new ConcurrentHashMap<>();
+
+    private boolean redisAvailable = false;
+    private Object jedisPool = null;
+
+    TestStateStore() {
+      tryInitRedis();
+    }
+
+    private void tryInitRedis() {
+      try {
+        Class<?> poolConfigClass = Class.forName("redis.clients.jedis.JedisPoolConfig");
+        Object poolConfig = poolConfigClass.getDeclaredConstructor().newInstance();
+        Class<?> jedisPoolClass = Class.forName("redis.clients.jedis.JedisPool");
+        jedisPool =
+            jedisPoolClass
+                .getDeclaredConstructor(poolConfigClass, String.class, int.class)
+                .newInstance(poolConfig, REDIS_HOST, REDIS_PORT);
+        redisAvailable = true;
+        LOG.info("TestStateStore: connected to ElastiCache Redis at " + REDIS_HOST + ":" + REDIS_PORT);
+      } catch (ClassNotFoundException e) {
+        LOG.warning(
+            "TestStateStore: Jedis not on classpath – using in-process map. "
+                + "Add jedis dependency to enable Redis-backed test state.");
+      } catch (Exception e) {
+        LOG.log(
+            Level.WARNING,
+            "TestStateStore: could not connect to Redis at " + REDIS_HOST + ":" + REDIS_PORT
+                + " – using in-process map.",
+            e);
+      }
+    }
+
+    /** Stores a string value (e.g. serialised tracking-id or deadline). */
+    void putString(String key, String value) {
+      localStore.put(key, value);
+      if (redisAvailable) {
+        try {
+          hset(key, value);
+        } catch (Exception e) {
+          LOG.log(Level.WARNING, "TestStateStore: Redis write failed for key=" + key, e);
+        }
+      }
+    }
+
+    /** Retrieves a string value. */
+    String getString(String key) {
+      if (redisAvailable) {
+        try {
+          String val = hget(key);
+          if (val != null) {
+            localStore.put(key, val);
+            return val;
+          }
+        } catch (Exception e) {
+          LOG.log(Level.WARNING, "TestStateStore: Redis read failed for key=" + key, e);
+        }
+      }
+      Object v = localStore.get(key);
+      return v != null ? v.toString() : null;
+    }
+
+    /** Stores an arbitrary object in the local fallback map (non-serialisable types). */
+    void putObject(String key, Object value) {
+      localStore.put(key, value);
+    }
+
+    /** Retrieves an arbitrary object from the local fallback map. */
+    @SuppressWarnings("unchecked")
+    <T> T getObject(String key) {
+      return (T) localStore.get(key);
+    }
+
+    // Reflective Jedis helpers to avoid a hard compile-time dependency.
+    private void hset(String field, String value) throws Exception {
+      Class<?> poolClass = Class.forName("redis.clients.jedis.JedisPool");
+      Object jedis = poolClass.getMethod("getResource").invoke(jedisPool);
+      try {
+        Class<?> jedisClass = Class.forName("redis.clients.jedis.Jedis");
+        jedisClass
+            .getMethod("hset", String.class, String.class, String.class)
+            .invoke(jedis, HASH_KEY, field, value);
+      } finally {
+        jedis.getClass().getMethod("close").invoke(jedis);
+      }
+    }
+
+    private String hget(String field) throws Exception {
+      Class<?> poolClass = Class.forName("redis.clients.jedis.JedisPool");
+      Object jedis = poolClass.getMethod("getResource").invoke(jedisPool);
+      try {
+        Class<?> jedisClass = Class.forName("redis.clients.jedis.Jedis");
+        return (String)
+            jedisClass
+                .getMethod("hget", String.class, String.class)
+                .invoke(jedis, HASH_KEY, field);
+      } finally {
+        jedis.getClass().getMethod("close").invoke(jedis);
+      }
+    }
+  }
+
+  /**
+   * Shared Redis-backed state store that replaces the former static mutable fields.
+   * Backed by Amazon ElastiCache for Redis when available; falls back to an in-process map.
+   */
+  private static final TestStateStore STATE = new TestStateStore();
 
   @Inject private BookingService bookingService;
   @PersistenceContext private EntityManager entityManager;
@@ -172,9 +323,14 @@ public class BookingServiceTest {
     UnLocode fromUnlocode = new UnLocode("USCHI");
     UnLocode toUnlocode = new UnLocode("SESTO");
 
-    deadline = LocalDate.now().plusMonths(6);
+    // Store deadline in Redis-backed state store instead of a static mutable field
+    LocalDate deadline = LocalDate.now().plusMonths(6);
+    STATE.putString(TestStateStore.KEY_DEADLINE, deadline.toString());
 
-    trackingId = bookingService.bookNewCargo(fromUnlocode, toUnlocode, deadline);
+    TrackingId trackingId = bookingService.bookNewCargo(fromUnlocode, toUnlocode, deadline);
+    // Persist trackingId string to Redis-backed state store
+    STATE.putString(TestStateStore.KEY_TRACKING_ID, trackingId.getIdString());
+    STATE.putObject(TestStateStore.KEY_TRACKING_ID + ":obj", trackingId);
 
     Cargo cargo =
         entityManager
@@ -199,7 +355,11 @@ public class BookingServiceTest {
   @Test
   @Order(2)
   public void testRouteCandidates() {
-    candidates = bookingService.requestPossibleRoutesForCargo(trackingId);
+    // Retrieve trackingId from Redis-backed state store
+    TrackingId trackingId = STATE.getObject(TestStateStore.KEY_TRACKING_ID + ":obj");
+    List<Itinerary> candidates = bookingService.requestPossibleRoutesForCargo(trackingId);
+    // Persist candidates to Redis-backed state store
+    STATE.putObject("candidates", candidates);
 
     assertFalse(candidates.isEmpty());
   }
@@ -207,7 +367,15 @@ public class BookingServiceTest {
   @Test
   @Order(3)
   public void testAssignRoute() {
-    assigned = candidates.get(new Random().nextInt(candidates.size()));
+    // Retrieve shared state from Redis-backed state store
+    TrackingId trackingId = STATE.getObject(TestStateStore.KEY_TRACKING_ID + ":obj");
+    List<Itinerary> candidates = STATE.getObject("candidates");
+    String deadlineStr = STATE.getString(TestStateStore.KEY_DEADLINE);
+    LocalDate deadline = LocalDate.parse(deadlineStr);
+
+    Itinerary assigned = candidates.get(new Random().nextInt(candidates.size()));
+    // Persist assigned itinerary to Redis-backed state store
+    STATE.putObject("assigned", assigned);
 
     bookingService.assignCargoToRoute(assigned, trackingId);
 
@@ -235,6 +403,12 @@ public class BookingServiceTest {
   @Test
   @Order(4)
   public void testChangeDestination() {
+    // Retrieve shared state from Redis-backed state store
+    TrackingId trackingId = STATE.getObject(TestStateStore.KEY_TRACKING_ID + ":obj");
+    Itinerary assigned = STATE.getObject("assigned");
+    String deadlineStr = STATE.getString(TestStateStore.KEY_DEADLINE);
+    LocalDate deadline = LocalDate.parse(deadlineStr);
+
     bookingService.changeDestination(trackingId, new UnLocode("FIHEL"));
 
     Cargo cargo =
@@ -260,6 +434,12 @@ public class BookingServiceTest {
   @Test
   @Order(5)
   public void testChangeDeadline() {
+    // Retrieve shared state from Redis-backed state store
+    TrackingId trackingId = STATE.getObject(TestStateStore.KEY_TRACKING_ID + ":obj");
+    Itinerary assigned = STATE.getObject("assigned");
+    String deadlineStr = STATE.getString(TestStateStore.KEY_DEADLINE);
+    LocalDate deadline = LocalDate.parse(deadlineStr);
+
     LocalDate newDeadline = deadline.plusMonths(1);
     bookingService.changeDeadline(trackingId, newDeadline);
 

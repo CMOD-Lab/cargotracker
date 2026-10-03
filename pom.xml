@@ -28,13 +28,27 @@
     <surefire.version>3.5.2</surefire.version>
     <dependency.plugin.version>3.8.1</dependency.plugin.version>
     <cargo.plugin.version>1.10.18</cargo.plugin.version>
+    <aws.sdk.version>2.26.12</aws.sdk.version>
     <h2.version>2.3.232</h2.version>
     <payara.version>6.2025.3</payara.version>
+    <!-- Jedis Redis client version for Amazon ElastiCache connectivity -->
+    <jedis.version>5.1.0</jedis.version>
     <payara.arquillian.adapter.version>3.1</payara.arquillian.adapter.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>    
   </properties>
   <dependencyManagement>
     <dependencies>
+      <!-- Arquillian Bill Of Management used to reduce collision between testing
+      dependencies. Using a dependency manager we don't need to specify the version of
+      each Arquillian dependency. -->
+      <!-- AWS SDK v2 BOM for consistent dependency management -->
+      <dependency>
+        <groupId>software.amazon.awssdk</groupId>
+        <artifactId>bom</artifactId>
+        <version>${aws.sdk.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
       <!-- Arquillian Bill Of Management used to reduce collision between testing
       dependencies. Using a dependency manager we don't need to specify the version of
       each Arquillian dependency. -->
@@ -79,6 +93,24 @@
       <version>3.1.10</version>
       <scope>provided</scope>
     </dependency>    
+    <!-- AWS SDK v2 S3 client for cloud-native file storage -->
+    <dependency>
+      <groupId>software.amazon.awssdk</groupId>
+      <artifactId>s3</artifactId>
+    </dependency>
+    <!-- AWS SDK v2 SQS client for cloud-native messaging (cr-java-0103) -->
+    <!-- Replaces JMS queue dependencies with Amazon SQS integration -->
+    <dependency>
+      <groupId>software.amazon.awssdk</groupId>
+      <artifactId>sqs</artifactId>
+    </dependency>
+    <!-- Jedis Redis client for Amazon ElastiCache for Redis (cr-java-0066) -->
+    <!-- Replaces static mutable state with distributed Redis-backed state -->
+    <dependency>
+      <groupId>redis.clients</groupId>
+      <artifactId>jedis</artifactId>
+      <version>${jedis.version}</version>
+    </dependency>
     <!-- Test dependencies -->
     <dependency>
       <groupId>org.junit.jupiter</groupId>
