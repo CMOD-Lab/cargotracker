@@ -1,139 +1,264 @@
 package org.eclipse.cargotracker.domain.model.handling;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.fail;
-
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.Arrays;
 import org.eclipse.cargotracker.domain.model.cargo.Cargo;
 import org.eclipse.cargotracker.domain.model.cargo.RouteSpecification;
 import org.eclipse.cargotracker.domain.model.cargo.TrackingId;
-import org.eclipse.cargotracker.domain.model.location.SampleLocations;
-import org.eclipse.cargotracker.domain.model.voyage.SampleVoyages;
+import org.eclipse.cargotracker.domain.model.location.Location;
+import org.eclipse.cargotracker.domain.model.location.UnLocode;
+import org.eclipse.cargotracker.domain.model.voyage.Voyage;
+import org.eclipse.cargotracker.domain.model.voyage.VoyageNumber;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 
-public class HandlingEventTest {
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 
-  private final TrackingId trackingId = new TrackingId("XYZ");
-  private final RouteSpecification routeSpecification =
-      new RouteSpecification(SampleLocations.HONGKONG, SampleLocations.NEWYORK, LocalDate.now());
-  private final Cargo cargo = new Cargo(trackingId, routeSpecification);
+import static org.junit.jupiter.api.Assertions.*;
 
-  @Test
-  public void testNewWithCarrierMovement() {
-    HandlingEvent event1 =
-        new HandlingEvent(
-            cargo,
-            LocalDateTime.now(),
-            LocalDateTime.now(),
-            HandlingEvent.Type.LOAD,
-            SampleLocations.HONGKONG,
-            SampleVoyages.CM003);
-    assertEquals(SampleLocations.HONGKONG, event1.getLocation());
+@DisplayName("HandlingEvent Tests")
+class HandlingEventTest {
 
-    HandlingEvent event2 =
-        new HandlingEvent(
-            cargo,
-            LocalDateTime.now(),
-            LocalDateTime.now(),
-            HandlingEvent.Type.UNLOAD,
-            SampleLocations.NEWYORK,
-            SampleVoyages.CM003);
-    assertEquals(SampleLocations.NEWYORK, event2.getLocation());
+    private Location stockholm;
+    private Location hamburg;
+    private Location newYork;
+    private Voyage voyage;
+    private Cargo cargo;
+    private LocalDateTime completionTime;
+    private LocalDateTime registrationTime;
 
-    // These event types prohibit a carrier movement association
-    for (HandlingEvent.Type type :
-        Arrays.asList(
-            HandlingEvent.Type.CLAIM, HandlingEvent.Type.RECEIVE, HandlingEvent.Type.CUSTOMS)) {
-      try {
-        new HandlingEvent(
-            cargo,
-            LocalDateTime.now(),
-            LocalDateTime.now(),
-            type,
-            SampleLocations.HONGKONG,
-            SampleVoyages.CM003);
-        fail("Handling event type " + type + " prohibits carrier movement");
-      } catch (IllegalArgumentException expected) {
-      }
+    @BeforeEach
+    void setUp() {
+        stockholm = new Location(new UnLocode("SESTO"), "Stockholm");
+        hamburg = new Location(new UnLocode("DEHAM"), "Hamburg");
+        newYork = new Location(new UnLocode("USNYC"), "New York");
+
+        voyage = new Voyage.Builder(new VoyageNumber("V001"), stockholm)
+                .addMovement(hamburg,
+                        LocalDateTime.of(2024, 1, 1, 10, 0),
+                        LocalDateTime.of(2024, 1, 3, 10, 0))
+                .build();
+
+        TrackingId trackingId = new TrackingId("TEST001");
+        RouteSpecification routeSpec = new RouteSpecification(stockholm, newYork,
+                LocalDate.of(2024, 12, 31));
+        cargo = new Cargo(trackingId, routeSpec);
+
+        completionTime = LocalDateTime.of(2024, 1, 1, 10, 0, 0);
+        registrationTime = LocalDateTime.of(2024, 1, 1, 10, 0, 0);
     }
 
-    // These event types requires a carrier movement association
-    for (HandlingEvent.Type type :
-        Arrays.asList(HandlingEvent.Type.LOAD, HandlingEvent.Type.UNLOAD)) {
-      try {
-        new HandlingEvent(
-            cargo, LocalDateTime.now(), LocalDateTime.now(), type, SampleLocations.HONGKONG, null);
-        fail("Handling event type " + type + " requires carrier movement");
-      } catch (NullPointerException expected) {
-      }
+    @Test
+    @DisplayName("Constructor with voyage creates HandlingEvent for LOAD type")
+    void constructor_withVoyage_createsLoadEvent() {
+        HandlingEvent event = new HandlingEvent(cargo, completionTime, registrationTime,
+                HandlingEvent.Type.LOAD, stockholm, voyage);
+        assertNotNull(event);
+        assertEquals(HandlingEvent.Type.LOAD, event.getType());
+        assertEquals(stockholm, event.getLocation());
+        assertEquals(voyage, event.getVoyage());
+        assertEquals(cargo, event.getCargo());
     }
-  }
 
-  @Test
-  public void testNewWithLocation() {
-    HandlingEvent event1 =
-        new HandlingEvent(
-            cargo,
-            LocalDateTime.now(),
-            LocalDateTime.now(),
-            HandlingEvent.Type.CLAIM,
-            SampleLocations.HELSINKI);
-    assertEquals(SampleLocations.HELSINKI, event1.getLocation());
-  }
+    @Test
+    @DisplayName("Constructor without voyage creates HandlingEvent for RECEIVE type")
+    void constructor_withoutVoyage_createsReceiveEvent() {
+        HandlingEvent event = new HandlingEvent(cargo, completionTime, registrationTime,
+                HandlingEvent.Type.RECEIVE, stockholm);
+        assertNotNull(event);
+        assertEquals(HandlingEvent.Type.RECEIVE, event.getType());
+        assertEquals(stockholm, event.getLocation());
+        assertEquals(cargo, event.getCargo());
+    }
 
-  @Test
-  public void testCurrentLocationLoadEvent() throws Exception {
-    HandlingEvent event =
-        new HandlingEvent(
-            cargo,
-            LocalDateTime.now(),
-            LocalDateTime.now(),
-            HandlingEvent.Type.LOAD,
-            SampleLocations.CHICAGO,
-            SampleVoyages.CM004);
+    @Test
+    @DisplayName("Default constructor creates HandlingEvent")
+    void defaultConstructor_createsHandlingEvent() {
+        HandlingEvent event = new HandlingEvent();
+        assertNotNull(event);
+    }
 
-    assertEquals(SampleLocations.CHICAGO, event.getLocation());
-  }
+    @Test
+    @DisplayName("Constructor with voyage for RECEIVE type throws IllegalArgumentException")
+    void constructor_withVoyageForReceiveType_throwsException() {
+        assertThrows(IllegalArgumentException.class, () ->
+                new HandlingEvent(cargo, completionTime, registrationTime,
+                        HandlingEvent.Type.RECEIVE, stockholm, voyage));
+    }
 
-  @Test
-  public void testCurrentLocationUnloadEvent() throws Exception {
-    HandlingEvent ev =
-        new HandlingEvent(
-            cargo,
-            LocalDateTime.now(),
-            LocalDateTime.now(),
-            HandlingEvent.Type.UNLOAD,
-            SampleLocations.HAMBURG,
-            SampleVoyages.CM004);
+    @Test
+    @DisplayName("Constructor without voyage for LOAD type throws IllegalArgumentException")
+    void constructor_withoutVoyageForLoadType_throwsException() {
+        assertThrows(IllegalArgumentException.class, () ->
+                new HandlingEvent(cargo, completionTime, registrationTime,
+                        HandlingEvent.Type.LOAD, stockholm));
+    }
 
-    assertEquals(SampleLocations.HAMBURG, ev.getLocation());
-  }
+    @Test
+    @DisplayName("Constructor with null cargo throws NullPointerException")
+    void constructor_withNullCargo_throwsException() {
+        assertThrows(NullPointerException.class, () ->
+                new HandlingEvent(null, completionTime, registrationTime,
+                        HandlingEvent.Type.RECEIVE, stockholm));
+    }
 
-  @Test
-  public void testCurrentLocationReceivedEvent() throws Exception {
-    HandlingEvent event =
-        new HandlingEvent(
-            cargo,
-            LocalDateTime.now(),
-            LocalDateTime.now(),
-            HandlingEvent.Type.RECEIVE,
-            SampleLocations.CHICAGO);
+    @Test
+    @DisplayName("Constructor with null completionTime throws NullPointerException")
+    void constructor_withNullCompletionTime_throwsException() {
+        assertThrows(NullPointerException.class, () ->
+                new HandlingEvent(cargo, null, registrationTime,
+                        HandlingEvent.Type.RECEIVE, stockholm));
+    }
 
-    assertEquals(SampleLocations.CHICAGO, event.getLocation());
-  }
+    @Test
+    @DisplayName("Constructor with null location throws NullPointerException")
+    void constructor_withNullLocation_throwsException() {
+        assertThrows(NullPointerException.class, () ->
+                new HandlingEvent(cargo, completionTime, registrationTime,
+                        HandlingEvent.Type.RECEIVE, null));
+    }
 
-  @Test
-  public void testCurrentLocationClaimedEvent() throws Exception {
-    HandlingEvent event =
-        new HandlingEvent(
-            cargo,
-            LocalDateTime.now(),
-            LocalDateTime.now(),
-            HandlingEvent.Type.CLAIM,
-            SampleLocations.CHICAGO);
+    @Test
+    @DisplayName("getType returns the event type")
+    void getType_returnsEventType() {
+        HandlingEvent event = new HandlingEvent(cargo, completionTime, registrationTime,
+                HandlingEvent.Type.RECEIVE, stockholm);
+        assertEquals(HandlingEvent.Type.RECEIVE, event.getType());
+    }
 
-    assertEquals(SampleLocations.CHICAGO, event.getLocation());
-  }
+    @Test
+    @DisplayName("getVoyage returns NONE for event without voyage")
+    void getVoyage_withoutVoyage_returnsNone() {
+        HandlingEvent event = new HandlingEvent(cargo, completionTime, registrationTime,
+                HandlingEvent.Type.RECEIVE, stockholm);
+        assertEquals(Voyage.NONE, event.getVoyage());
+    }
+
+    @Test
+    @DisplayName("getVoyage returns voyage for event with voyage")
+    void getVoyage_withVoyage_returnsVoyage() {
+        HandlingEvent event = new HandlingEvent(cargo, completionTime, registrationTime,
+                HandlingEvent.Type.LOAD, stockholm, voyage);
+        assertEquals(voyage, event.getVoyage());
+    }
+
+    @Test
+    @DisplayName("getCompletionTime returns completion time")
+    void getCompletionTime_returnsCompletionTime() {
+        HandlingEvent event = new HandlingEvent(cargo, completionTime, registrationTime,
+                HandlingEvent.Type.RECEIVE, stockholm);
+        assertEquals(completionTime, event.getCompletionTime());
+    }
+
+    @Test
+    @DisplayName("getRegistrationTime returns registration time")
+    void getRegistrationTime_returnsRegistrationTime() {
+        HandlingEvent event = new HandlingEvent(cargo, completionTime, registrationTime,
+                HandlingEvent.Type.RECEIVE, stockholm);
+        assertEquals(registrationTime, event.getRegistrationTime());
+    }
+
+    @Test
+    @DisplayName("getLocation returns location")
+    void getLocation_returnsLocation() {
+        HandlingEvent event = new HandlingEvent(cargo, completionTime, registrationTime,
+                HandlingEvent.Type.RECEIVE, stockholm);
+        assertEquals(stockholm, event.getLocation());
+    }
+
+    @Test
+    @DisplayName("getCargo returns cargo")
+    void getCargo_returnsCargo() {
+        HandlingEvent event = new HandlingEvent(cargo, completionTime, registrationTime,
+                HandlingEvent.Type.RECEIVE, stockholm);
+        assertEquals(cargo, event.getCargo());
+    }
+
+    @Test
+    @DisplayName("getSummary returns non-null string")
+    void getSummary_returnsNonNullString() {
+        HandlingEvent event = new HandlingEvent(cargo, completionTime, registrationTime,
+                HandlingEvent.Type.RECEIVE, stockholm);
+        assertNotNull(event.getSummary());
+        assertTrue(event.getSummary().contains("Stockholm"));
+    }
+
+    @Test
+    @DisplayName("getSummary includes voyage number when voyage is present")
+    void getSummary_withVoyage_includesVoyageNumber() {
+        HandlingEvent event = new HandlingEvent(cargo, completionTime, registrationTime,
+                HandlingEvent.Type.LOAD, stockholm, voyage);
+        assertTrue(event.getSummary().contains("V001"));
+    }
+
+    @Test
+    @DisplayName("equals returns true for same instance")
+    void equals_sameInstance_returnsTrue() {
+        HandlingEvent event = new HandlingEvent(cargo, completionTime, registrationTime,
+                HandlingEvent.Type.RECEIVE, stockholm);
+        assertEquals(event, event);
+    }
+
+    @Test
+    @DisplayName("equals returns false for null")
+    void equals_null_returnsFalse() {
+        HandlingEvent event = new HandlingEvent(cargo, completionTime, registrationTime,
+                HandlingEvent.Type.RECEIVE, stockholm);
+        assertNotEquals(null, event);
+    }
+
+    @Test
+    @DisplayName("toString returns non-null string")
+    void toString_returnsNonNullString() {
+        HandlingEvent event = new HandlingEvent(cargo, completionTime, registrationTime,
+                HandlingEvent.Type.RECEIVE, stockholm);
+        assertNotNull(event.toString());
+    }
+
+    @Test
+    @DisplayName("Type.LOAD requires voyage")
+    void typeLoad_requiresVoyage() {
+        assertTrue(HandlingEvent.Type.LOAD.requiresVoyage());
+        assertFalse(HandlingEvent.Type.LOAD.prohibitsVoyage());
+    }
+
+    @Test
+    @DisplayName("Type.RECEIVE prohibits voyage")
+    void typeReceive_prohibitsVoyage() {
+        assertFalse(HandlingEvent.Type.RECEIVE.requiresVoyage());
+        assertTrue(HandlingEvent.Type.RECEIVE.prohibitsVoyage());
+    }
+
+    @Test
+    @DisplayName("Type.CLAIM prohibits voyage")
+    void typeClaim_prohibitsVoyage() {
+        assertFalse(HandlingEvent.Type.CLAIM.requiresVoyage());
+        assertTrue(HandlingEvent.Type.CLAIM.prohibitsVoyage());
+    }
+
+    @Test
+    @DisplayName("Type.CUSTOMS prohibits voyage")
+    void typeCustoms_prohibitsVoyage() {
+        assertFalse(HandlingEvent.Type.CUSTOMS.requiresVoyage());
+        assertTrue(HandlingEvent.Type.CUSTOMS.prohibitsVoyage());
+    }
+
+    @Test
+    @DisplayName("Type.UNLOAD requires voyage")
+    void typeUnload_requiresVoyage() {
+        assertTrue(HandlingEvent.Type.UNLOAD.requiresVoyage());
+        assertFalse(HandlingEvent.Type.UNLOAD.prohibitsVoyage());
+    }
+
+    @Test
+    @DisplayName("Type.sameValueAs returns true for same type")
+    void typeSameValueAs_sameType_returnsTrue() {
+        assertTrue(HandlingEvent.Type.LOAD.sameValueAs(HandlingEvent.Type.LOAD));
+    }
+
+    @Test
+    @DisplayName("Type.sameValueAs returns false for different type")
+    void typeSameValueAs_differentType_returnsFalse() {
+        assertFalse(HandlingEvent.Type.LOAD.sameValueAs(HandlingEvent.Type.UNLOAD));
+    }
 }
