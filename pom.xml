@@ -11,7 +11,7 @@
   <description>
     The project demonstrates how you can develop applications with the 
     Jakarta EE platform using widely adopted architectural best 
-    practices like Domain-Driven Design (DDD).
+    practices like Domain-Driven Design (DDD). Upgraded to Jakarta EE 10.
   </description>
   <url>https://eclipse-ee4j.github.io/cargotracker/</url>
   <organization>
