@@ -27,6 +27,7 @@
     <jakartaee.api.version>10.0.0</jakartaee.api.version>
     <surefire.version>3.5.2</surefire.version>
     <dependency.plugin.version>3.8.1</dependency.plugin.version>
+    <aws.sdk.version>2.25.40</aws.sdk.version>
     <cargo.plugin.version>1.10.18</cargo.plugin.version>
     <h2.version>2.3.232</h2.version>
     <payara.version>6.2025.3</payara.version>
@@ -49,6 +50,14 @@
         <groupId>org.junit</groupId>
         <artifactId>junit-bom</artifactId>
         <version>5.12.1</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <!-- AWS SDK v2 BOM for S3 object storage -->
+      <dependency>
+        <groupId>software.amazon.awssdk</groupId>
+        <artifactId>bom</artifactId>
+        <version>${aws.sdk.version}</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -78,7 +87,23 @@
       <artifactId>jersey-server</artifactId>
       <version>3.1.10</version>
       <scope>provided</scope>
-    </dependency>    
+    </dependency>
+    <!-- AWS SDK v2 S3 client for cloud-native file storage -->
+    <dependency>
+      <groupId>software.amazon.awssdk</groupId>
+      <artifactId>s3</artifactId>
+    </dependency>
+    <!-- AWS SDK v2 SQS client for cloud-native messaging (replaces JMS cr-java-0103) -->
+    <dependency>
+      <groupId>software.amazon.awssdk</groupId>
+      <artifactId>sqs</artifactId>
+    </dependency>
+    <!-- Redis client for Amazon ElastiCache - replaces static mutable state (cr-java-0066) -->
+    <dependency>
+      <groupId>redis.clients</groupId>
+      <artifactId>jedis</artifactId>
+      <version>5.1.0</version>
+    </dependency>
     <!-- Test dependencies -->
     <dependency>
       <groupId>org.junit.jupiter</groupId>

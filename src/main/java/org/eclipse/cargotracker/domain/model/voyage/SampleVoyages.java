@@ -9,8 +9,15 @@ import java.util.List;
 import java.util.Map;
 import org.eclipse.cargotracker.domain.model.location.Location;
 import org.eclipse.cargotracker.domain.model.location.SampleLocations;
+import org.eclipse.cargotracker.infrastructure.cache.RedisVoyageRegistry;
 
-/** Sample carrier movements, for demo/test purposes. */
+/**
+ * Sample carrier movements, for demo/test purposes.
+ *
+ * <p>Static mutable state (the ALL map) has been migrated to Amazon ElastiCache for Redis via
+ * {@link RedisVoyageRegistry} to ensure consistency across distributed cloud instances
+ * (cr-java-0066).
+ */
 public class SampleVoyages {
 
   public static final Voyage CM001 =
@@ -268,19 +275,35 @@ public class SampleVoyages {
                   .plusMinutes(37))
           .build();
 
-  public static final Map<VoyageNumber, Voyage> ALL = new HashMap<>();
+  /**
+   * Read-only view of all sample voyages, backed by Amazon ElastiCache for Redis via
+   * {@link RedisVoyageRegistry}. The mutable static HashMap has been replaced with a Redis-backed
+   * registry to ensure consistent state across distributed cloud instances (cr-java-0066).
+   *
+   * <p>This field is kept for backward compatibility; all mutations go through
+   * {@link RedisVoyageRegistry}.
+   */
+  public static final Map<VoyageNumber, Voyage> ALL;
 
   static {
+    // Build a local map from declared Voyage fields and register each voyage in Redis.
+    Map<VoyageNumber, Voyage> localMap = new HashMap<>();
     for (Field field : SampleVoyages.class.getDeclaredFields()) {
       if (field.getType().equals(Voyage.class)) {
         try {
           Voyage voyage = (Voyage) field.get(null);
-          ALL.put(voyage.getVoyageNumber(), voyage);
+          localMap.put(voyage.getVoyageNumber(), voyage);
+          // Persist voyage number to Amazon ElastiCache for Redis so all distributed
+          // instances share the same voyage registry state (cr-java-0066 remediation).
+          RedisVoyageRegistry.register(voyage);
         } catch (IllegalAccessException e) {
           throw new RuntimeException(e);
         }
       }
     }
+    // Expose as an unmodifiable map; runtime lookups delegate to Redis for cross-instance
+    // consistency while this local snapshot serves as a fast in-process fallback.
+    ALL = Collections.unmodifiableMap(localMap);
   }
 
   private static Voyage createVoyage(String id, Location from, Location to) {
@@ -295,7 +318,18 @@ public class SampleVoyages {
     return new ArrayList<>(ALL.values());
   }
 
+  /**
+   * Looks up a voyage by its number. Delegates to Amazon ElastiCache for Redis first to ensure
+   * cross-instance consistency; falls back to the local in-process map if Redis is unavailable.
+   *
+   * @param voyageNumber the voyage number to look up
+   * @return the matching {@link Voyage}, or {@code null} if not found
+   */
   public static Voyage lookup(VoyageNumber voyageNumber) {
+    Voyage fromRedis = RedisVoyageRegistry.lookup(voyageNumber);
+    if (fromRedis != null) {
+      return fromRedis;
+    }
     return ALL.get(voyageNumber);
   }
 }

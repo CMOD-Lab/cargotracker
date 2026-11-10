@@ -48,6 +48,7 @@ import org.eclipse.cargotracker.domain.shared.DomainObjectUtils;
 import org.eclipse.cargotracker.domain.shared.NotSpecification;
 import org.eclipse.cargotracker.domain.shared.OrSpecification;
 import org.eclipse.cargotracker.domain.shared.Specification;
+import org.eclipse.cargotracker.infrastructure.cache.RedisTestStateStore;
 import org.eclipse.cargotracker.infrastructure.logging.LoggerProducer;
 import org.eclipse.cargotracker.infrastructure.persistence.jpa.JpaCargoRepository;
 import org.eclipse.cargotracker.infrastructure.persistence.jpa.JpaHandlingEventRepository;
@@ -72,14 +73,22 @@ import org.junit.jupiter.api.extension.ExtendWith;
 /**
  * Application layer integration test covering a number of otherwise fairly trivial components that
  * largely do not warrant their own tests.
+ *
+ * <p>Static mutable fields that previously held shared test state ({@code trackingId},
+ * {@code candidates}, {@code deadline}, {@code assigned}) have been replaced with
+ * {@link RedisTestStateStore} backed by Amazon ElastiCache for Redis to ensure consistent state
+ * across distributed test runners (cr-java-0066).
  */
 @ExtendWith(ArquillianExtension.class)
 @TestMethodOrder(OrderAnnotation.class)
 public class BookingServiceTest {
-  private static TrackingId trackingId;
-  private static List<Itinerary> candidates;
-  private static LocalDate deadline;
-  private static Itinerary assigned;
+
+  /**
+   * Redis-backed store for inter-test state that was previously held in static mutable fields.
+   * Using {@link RedisTestStateStore} ensures all distributed test instances share the same
+   * state, eliminating the data inconsistency caused by per-JVM static variables (cr-java-0066).
+   */
+  private static final RedisTestStateStore TEST_STATE = new RedisTestStateStore("BookingServiceTest");
 
   @Inject private BookingService bookingService;
   @PersistenceContext private EntityManager entityManager;
@@ -151,6 +160,8 @@ public class BookingServiceTest {
         .addClass(BookingServiceTestDataGenerator.class)
         .addClass(SampleLocations.class)
         .addClass(SampleVoyages.class)
+        // Redis-backed state store (cr-java-0066 remediation)
+        .addClass(RedisTestStateStore.class)
         // Persistence unit descriptor
         .addAsResource("test-persistence.xml", "META-INF/persistence.xml")
         // Web application descriptor
@@ -172,9 +183,13 @@ public class BookingServiceTest {
     UnLocode fromUnlocode = new UnLocode("USCHI");
     UnLocode toUnlocode = new UnLocode("SESTO");
 
-    deadline = LocalDate.now().plusMonths(6);
+    LocalDate deadline = LocalDate.now().plusMonths(6);
+    // Persist deadline to Redis-backed state store for cross-instance access (cr-java-0066).
+    TEST_STATE.putString("deadline", deadline.toString());
 
-    trackingId = bookingService.bookNewCargo(fromUnlocode, toUnlocode, deadline);
+    TrackingId trackingId = bookingService.bookNewCargo(fromUnlocode, toUnlocode, deadline);
+    // Persist trackingId to Redis-backed state store for cross-instance access (cr-java-0066).
+    TEST_STATE.putString("trackingId", trackingId.getIdString());
 
     Cargo cargo =
         entityManager
@@ -199,7 +214,14 @@ public class BookingServiceTest {
   @Test
   @Order(2)
   public void testRouteCandidates() {
-    candidates = bookingService.requestPossibleRoutesForCargo(trackingId);
+    // Retrieve trackingId from Redis-backed state store (cr-java-0066).
+    TrackingId trackingId = new TrackingId(TEST_STATE.getString("trackingId"));
+    List<Itinerary> candidates = bookingService.requestPossibleRoutesForCargo(trackingId);
+    // Persist candidate count to Redis-backed state store for cross-instance access (cr-java-0066).
+    TEST_STATE.putInt("candidatesSize", candidates.size());
+    // Persist the selected candidate index for use in testAssignRoute.
+    int selectedIndex = new Random().nextInt(candidates.size());
+    TEST_STATE.putInt("selectedCandidateIndex", selectedIndex);
 
     assertFalse(candidates.isEmpty());
   }
@@ -207,7 +229,15 @@ public class BookingServiceTest {
   @Test
   @Order(3)
   public void testAssignRoute() {
-    assigned = candidates.get(new Random().nextInt(candidates.size()));
+    // Retrieve shared state from Redis-backed state store (cr-java-0066).
+    TrackingId trackingId = new TrackingId(TEST_STATE.getString("trackingId"));
+    LocalDate deadline = LocalDate.parse(TEST_STATE.getString("deadline"));
+
+    List<Itinerary> candidates = bookingService.requestPossibleRoutesForCargo(trackingId);
+    int selectedIndex = TEST_STATE.getInt("selectedCandidateIndex", 0);
+    Itinerary assigned = candidates.get(selectedIndex % candidates.size());
+    // Persist assigned itinerary identifier to Redis-backed state store (cr-java-0066).
+    TEST_STATE.putInt("assignedIndex", selectedIndex % candidates.size());
 
     bookingService.assignCargoToRoute(assigned, trackingId);
 
@@ -235,6 +265,13 @@ public class BookingServiceTest {
   @Test
   @Order(4)
   public void testChangeDestination() {
+    // Retrieve shared state from Redis-backed state store (cr-java-0066).
+    TrackingId trackingId = new TrackingId(TEST_STATE.getString("trackingId"));
+    LocalDate deadline = LocalDate.parse(TEST_STATE.getString("deadline"));
+    List<Itinerary> candidates = bookingService.requestPossibleRoutesForCargo(trackingId);
+    int assignedIndex = TEST_STATE.getInt("assignedIndex", 0);
+    Itinerary assigned = candidates.get(assignedIndex % candidates.size());
+
     bookingService.changeDestination(trackingId, new UnLocode("FIHEL"));
 
     Cargo cargo =
@@ -260,6 +297,13 @@ public class BookingServiceTest {
   @Test
   @Order(5)
   public void testChangeDeadline() {
+    // Retrieve shared state from Redis-backed state store (cr-java-0066).
+    TrackingId trackingId = new TrackingId(TEST_STATE.getString("trackingId"));
+    LocalDate deadline = LocalDate.parse(TEST_STATE.getString("deadline"));
+    List<Itinerary> candidates = bookingService.requestPossibleRoutesForCargo(trackingId);
+    int assignedIndex = TEST_STATE.getInt("assignedIndex", 0);
+    Itinerary assigned = candidates.get(assignedIndex % candidates.size());
+
     LocalDate newDeadline = deadline.plusMonths(1);
     bookingService.changeDeadline(trackingId, newDeadline);
 

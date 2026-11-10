@@ -8249,9 +8249,9 @@
   		return this.redraw();
   	},
 
-  	_setLatLngs: function (latlngs) {
+  	_setLatLngs: async function (latlngs) {
   		this._bounds = new LatLngBounds();
-  		this._latlngs = this._convertLatLngs(latlngs);
+  		this._latlngs = await this._convertLatLngs(latlngs);
   	},
 
   	_defaultShape: function () {
@@ -8259,7 +8259,7 @@
   	},
 
   	// recursively convert latlngs input into actual LatLng instances; calculate bounds along the way
-  	_convertLatLngs: function (latlngs) {
+  	_convertLatLngs: async function (latlngs) {
   		var result = [],
   		    flat = isFlat(latlngs);
 
@@ -8268,11 +8268,11 @@
   				result[i] = toLatLng(latlngs[i]);
   				this._bounds.extend(result[i]);
   			} else {
-  				result[i] = this._convertLatLngs(latlngs[i]);
+  				result[i] = await this._convertLatLngs(latlngs[i]);
   			}
   		}
 
-  		return result;
+  		return Promise.resolve(result);
   	},
 
   	_project: function () {
@@ -8500,15 +8500,15 @@
   		return this._map.layerPointToLatLng(center);
   	},
 
-  	_convertLatLngs: function (latlngs) {
-  		var result = Polyline.prototype._convertLatLngs.call(this, latlngs),
+  	_convertLatLngs: async function (latlngs) {
+  		var result = await Polyline.prototype._convertLatLngs.call(this, latlngs),
   		    len = result.length;
 
   		// remove last point if it equals first one
   		if (len >= 2 && result[0] instanceof LatLng && result[0].equals(result[len - 1])) {
   			result.pop();
   		}
-  		return result;
+  		return Promise.resolve(result);
   	},
 
   	_setLatLngs: function (latlngs) {
